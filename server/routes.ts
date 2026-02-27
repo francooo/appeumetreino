@@ -1,11 +1,254 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "node:http";
+import bcrypt from "bcryptjs";
+import { storage } from "./storage";
+import { testConnection } from "./db";
+import {
+  registerSchema,
+  loginSchema,
+  googleAuthSchema,
+} from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // put application routes here
-  // prefix all routes with /api
+  app.get("/api/health", async (_req: Request, res: Response) => {
+    try {
+      const dbOk = await testConnection();
+      res.json({
+        status: dbOk ? "ok" : "degraded",
+        database: dbOk ? "connected" : "disconnected",
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: "error",
+        database: "disconnected",
+        message: String(error),
+      });
+    }
+  });
+
+  app.post("/api/auth/register", async (req: Request, res: Response) => {
+    try {
+      const parsed = registerSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: "Dados invalidos",
+          errors: parsed.error.flatten().fieldErrors,
+        });
+      }
+
+      const { name, email, password } = parsed.data;
+
+      const existing = await storage.getUserByEmail(email);
+      if (existing) {
+        return res.status(409).json({ message: "Email ja cadastrado" });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = await storage.createUser({
+        name,
+        email,
+        password: hashedPassword,
+      });
+
+      res.status(201).json({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        level: user.level,
+      });
+    } catch (error) {
+      console.error("Register error:", error);
+      res.status(500).json({ message: "Erro ao criar conta" });
+    }
+  });
+
+  app.post("/api/auth/login", async (req: Request, res: Response) => {
+    try {
+      const parsed = loginSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: "Dados invalidos",
+          errors: parsed.error.flatten().fieldErrors,
+        });
+      }
+
+      const { email, password } = parsed.data;
+
+      const user = await storage.getUserByEmail(email);
+      if (!user || !user.password) {
+        return res.status(401).json({ message: "Email ou senha incorretos" });
+      }
+
+      const valid = await bcrypt.compare(password, user.password);
+      if (!valid) {
+        return res.status(401).json({ message: "Email ou senha incorretos" });
+      }
+
+      res.json({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        level: user.level,
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Erro ao entrar" });
+    }
+  });
+
+  app.post("/api/auth/google", async (req: Request, res: Response) => {
+    try {
+      const parsed = googleAuthSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: "Dados invalidos",
+          errors: parsed.error.flatten().fieldErrors,
+        });
+      }
+
+      const { name, email, googleId } = parsed.data;
+
+      let user = await storage.getUserByGoogleId(googleId);
+
+      if (!user) {
+        const existingEmail = await storage.getUserByEmail(email);
+        if (existingEmail) {
+          return res.status(409).json({
+            message: "Email ja cadastrado com outra conta. Use login com email/senha.",
+          });
+        }
+        user = await storage.createUser({
+          name,
+          email,
+          googleId,
+          password: null,
+        });
+      }
+
+      res.json({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        level: user.level,
+      });
+    } catch (error) {
+      console.error("Google auth error:", error);
+      res.status(500).json({ message: "Erro na autenticacao Google" });
+    }
+  });
+
+  app.get("/api/user/:id", async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser(req.params.id);
+      if (!user) {
+        return res.status(404).json({ message: "Usuario nao encontrado" });
+      }
+      res.json({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        level: user.level,
+      });
+    } catch (error) {
+      console.error("Get user error:", error);
+      res.status(500).json({ message: "Erro ao buscar usuario" });
+    }
+  });
+
+  app.put("/api/user/:id/level", async (req: Request, res: Response) => {
+    try {
+      const { level } = req.body;
+      if (!["beginner", "intermediate", "advanced"].includes(level)) {
+        return res.status(400).json({ message: "Nivel invalido" });
+      }
+      await storage.updateUserLevel(req.params.id, level);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Update level error:", error);
+      res.status(500).json({ message: "Erro ao atualizar nivel" });
+    }
+  });
+
+  app.get("/api/user/:id/equipment", async (req: Request, res: Response) => {
+    try {
+      const items = await storage.getEquipmentByUser(req.params.id);
+      res.json(items);
+    } catch (error) {
+      console.error("Get equipment error:", error);
+      res.status(500).json({ message: "Erro ao buscar equipamentos" });
+    }
+  });
+
+  app.post("/api/user/:id/equipment", async (req: Request, res: Response) => {
+    try {
+      const { name, imageUri } = req.body;
+      if (!name) {
+        return res.status(400).json({ message: "Nome e obrigatorio" });
+      }
+      const item = await storage.addEquipment(req.params.id, name, imageUri);
+      res.status(201).json(item);
+    } catch (error) {
+      console.error("Add equipment error:", error);
+      res.status(500).json({ message: "Erro ao adicionar equipamento" });
+    }
+  });
+
+  app.delete(
+    "/api/user/:userId/equipment/:id",
+    async (req: Request, res: Response) => {
+      try {
+        await storage.removeEquipment(req.params.id, req.params.userId);
+        res.json({ success: true });
+      } catch (error) {
+        console.error("Remove equipment error:", error);
+        res.status(500).json({ message: "Erro ao remover equipamento" });
+      }
+    },
+  );
+
+  app.get("/api/user/:id/workouts", async (req: Request, res: Response) => {
+    try {
+      const items = await storage.getWorkoutsByUser(req.params.id);
+      res.json(items);
+    } catch (error) {
+      console.error("Get workouts error:", error);
+      res.status(500).json({ message: "Erro ao buscar treinos" });
+    }
+  });
+
+  app.post("/api/user/:id/workouts", async (req: Request, res: Response) => {
+    try {
+      const workout = req.body;
+      const saved = await storage.saveWorkout(req.params.id, workout);
+      res.status(201).json(saved);
+    } catch (error) {
+      console.error("Save workout error:", error);
+      res.status(500).json({ message: "Erro ao salvar treino" });
+    }
+  });
+
+  app.get("/api/user/:id/history", async (req: Request, res: Response) => {
+    try {
+      const items = await storage.getHistoryByUser(req.params.id);
+      res.json(items);
+    } catch (error) {
+      console.error("Get history error:", error);
+      res.status(500).json({ message: "Erro ao buscar historico" });
+    }
+  });
+
+  app.post("/api/user/:id/history", async (req: Request, res: Response) => {
+    try {
+      const entry = req.body;
+      const saved = await storage.addHistory(req.params.id, entry);
+      res.status(201).json(saved);
+    } catch (error) {
+      console.error("Add history error:", error);
+      res.status(500).json({ message: "Erro ao adicionar historico" });
+    }
+  });
 
   const httpServer = createServer(app);
-
   return httpServer;
 }
