@@ -1,0 +1,262 @@
+Criar o design completo das telas de um aplicativo mobile chamado “Eu me treino”, focado em gerar treinos personalizados a partir dos aparelhos de exercício que o usuário possui em casa, utilizando fotos capturadas pelo próprio usuário.
+
+O fluxo deve contemplar onboarding, autenticação e a jornada principal até a geração do treino.
+
+📱 Contexto do Aplicativo
+
+O aplicativo Eu me treino tem como proposta permitir que o usuário:
+
+Tire fotos dos equipamentos de treino que possui.
+
+Informe seu nível de experiência.
+
+Receba automaticamente um plano de treino personalizado baseado nesses dados.
+
+O app deve transmitir:
+
+Motivação
+
+Simplicidade
+
+Tecnologia acessível
+
+Saúde e bem-estar
+
+Personalização inteligente
+
+🎨 Diretrizes de Design
+
+Plataforma: Mobile (Android e iOS)
+
+Estilo visual: Moderno, limpo e tecnológico
+
+UX intuitiva e amigável para iniciantes
+
+Uso de elementos visuais relacionados a fitness
+
+Ícones claros e minimalistas
+
+Tipografia forte para títulos e leve para textos
+
+Componentização organizada (design system no Figma)
+
+Sugestão de cores (pode propor melhorias):
+
+Cor primária: Verde ou azul energético (fitness/saúde)
+
+Cor secundária: Branco / cinza claro
+
+Destaque: Gradientes modernos
+
+🔐 Telas Obrigatórias
+1️⃣ Splash Screen
+
+Logo “Eu me treino”
+
+Frase de impacto:
+
+“Seu treino personalizado com o que você tem em casa”
+
+Indicador de carregamento
+
+2️⃣ Onboarding (3 telas)
+
+Tela 1:
+
+Explicação: Tire fotos dos seus equipamentos
+
+Ilustração fitness
+
+Tela 2:
+
+Explicação: Informe seu nível de experiência
+
+Indicador de progresso
+
+Tela 3:
+
+Explicação: Receba treinos personalizados
+
+Botão “Começar”
+
+3️⃣ Login
+
+Elementos:
+
+Campo email
+
+Campo senha
+
+Botão “Entrar”
+
+Botão “Entrar com Google”
+
+Link “Criar conta”
+
+Link “Esqueci minha senha”
+
+4️⃣ Cadastro
+
+Campos:
+
+Nome
+
+Email
+
+Senha
+
+Confirmar senha
+
+Botões:
+
+Criar conta
+
+Cadastro com Google
+
+5️⃣ Seleção de Nível do Usuário
+
+Pergunta:
+
+Qual seu nível de experiência?
+
+Opções em cards:
+
+Iniciante
+
+Intermediário
+
+Avançado
+
+Cada opção com ícone ilustrativo.
+
+6️⃣ Permissão de Câmera
+
+Tela solicitando acesso:
+
+Precisamos acessar sua câmera para identificar seus equipamentos.
+
+Botão:
+
+Permitir acesso
+
+7️⃣ Captura de Equipamentos
+
+Interface de câmera:
+
+Botão tirar foto
+
+Upload da galeria
+
+Lista de fotos capturadas
+
+Botão “Continuar”
+
+8️⃣ Processamento IA
+
+Tela com loading:
+
+Analisando seus equipamentos e criando seu treino…
+
+Animação visual tecnológica.
+
+9️⃣ Resultado — Treino Gerado
+
+Mostrar:
+
+Nome do treino
+
+Lista de exercícios
+
+Séries e repetições
+
+Equipamentos usados
+
+Botão “Iniciar treino”
+
+Botão “Salvar”
+
+🔟 Tela Principal (Home)
+
+Elementos:
+
+Treino do dia
+
+Botão iniciar treino
+
+Histórico
+
+Perfil
+
+Adicionar equipamentos
+
+Menu inferior (bottom navigation).
+
+11️⃣ Perfil do Usuário
+
+Informações:
+
+Nome
+
+Nível
+
+Equipamentos cadastrados
+
+Editar dados
+
+Logout
+
+🧩 Componentes que devem ser criados no Figma
+
+Botões primários e secundários
+
+Inputs
+
+Cards
+
+Ícones fitness
+
+Bottom navigation
+
+Header padrão
+
+Modais
+
+Estados de loading
+
+Estados de erro
+
+🧠 Experiência UX Esperada
+
+O usuário deve sentir:
+
+Facilidade no uso
+
+Motivação para treinar
+
+Personalização real
+
+Tecnologia inteligente acessível
+
+📦 Entregáveis Esperados
+
+O agente deve gerar:
+
+Todas as telas em alta fidelidade (Hi-Fi)
+
+Protótipo navegável
+
+Componentes reutilizáveis
+
+Auto-layout aplicado
+
+Design responsivo
+
+Organização em páginas no Figma:
+
+Design System
+
+Fluxo Auth
+
+Fluxo Principal
+
+Protótipo
