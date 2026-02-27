@@ -219,7 +219,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/user/:id/workouts", async (req: Request, res: Response) => {
     try {
-      const workout = req.body;
+      const workout = { ...req.body };
+      delete workout.id;
+      if (workout.createdAt && typeof workout.createdAt === "number") {
+        workout.createdAt = new Date(workout.createdAt);
+      } else {
+        delete workout.createdAt;
+      }
       const saved = await storage.saveWorkout(req.params.id, workout);
       res.status(201).json(saved);
     } catch (error) {
@@ -240,7 +246,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/user/:id/history", async (req: Request, res: Response) => {
     try {
-      const entry = req.body;
+      const entry = { ...req.body };
+      delete entry.id;
+      if (entry.completedAt && typeof entry.completedAt === "number") {
+        entry.completedAt = new Date(entry.completedAt);
+      } else {
+        delete entry.completedAt;
+      }
       const saved = await storage.addHistory(req.params.id, entry);
       res.status(201).json(saved);
     } catch (error) {

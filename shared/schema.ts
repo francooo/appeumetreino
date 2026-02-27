@@ -55,7 +55,7 @@ export const workoutHistory = pgTable("workout_history", {
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id),
-  workoutId: uuid("workout_id").notNull(),
+  workoutId: text("workout_id").notNull(),
   workoutName: text("workout_name").notNull(),
   completedAt: timestamp("completed_at").defaultNow(),
   duration: integer("duration").notNull(),
