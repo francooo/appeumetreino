@@ -16,7 +16,7 @@ import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { useApp } from "@/contexts/AppContext";
 import { generateWorkout } from "@/lib/workout-generator";
-import type { WorkoutHistory } from "@/lib/storage";
+import type { Exercise } from "@/lib/storage";
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -27,7 +27,6 @@ export default function HomeScreen() {
     workouts,
     history,
     saveUserWorkout,
-    addWorkoutHistory,
   } = useApp();
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -49,20 +48,36 @@ export default function HomeScreen() {
     }, 1000);
   };
 
-  const handleCompleteWorkout = async () => {
+  const handleStartWorkout = () => {
     if (!latestWorkout) return;
     if (Platform.OS !== "web") {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    const entry: WorkoutHistory = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      workoutId: latestWorkout.id,
-      workoutName: latestWorkout.name,
-      completedAt: Date.now(),
-      duration: parseInt(latestWorkout.duration) || 30,
-    };
-    await addWorkoutHistory(entry);
-    Alert.alert("Parabens!", "Treino concluido com sucesso!");
+    router.push({
+      pathname: "/active-workout",
+      params: { workout: JSON.stringify(latestWorkout) },
+    });
+  };
+
+  const handleExerciseDetail = (exercise: Exercise) => {
+    router.push({
+      pathname: "/exercise-detail",
+      params: { exercise: JSON.stringify(exercise) },
+    });
+  };
+
+  const handleEquipmentPress = () => {
+    if (latestWorkout) {
+      const workoutEquipment = [
+        ...new Set(latestWorkout.exercises.map((ex) => ex.equipment)),
+      ];
+      router.push({
+        pathname: "/(tabs)/add-equipment",
+        params: { workoutEquipment: JSON.stringify(workoutEquipment) },
+      });
+    } else {
+      router.push("/(tabs)/add-equipment");
+    }
   };
 
   const greeting = () => {
@@ -105,7 +120,11 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.statsRow}>
-        <View style={styles.statCard}>
+        <Pressable
+          style={styles.statCard}
+          onPress={handleEquipmentPress}
+          testID="equipment-card"
+        >
           <LinearGradient
             colors={["rgba(0, 200, 83, 0.15)", "rgba(0, 200, 83, 0.05)"]}
             style={styles.statGradient}
@@ -114,7 +133,7 @@ export default function HomeScreen() {
             <Text style={styles.statValue}>{equipment.length}</Text>
             <Text style={styles.statLabel}>Equipamentos</Text>
           </LinearGradient>
-        </View>
+        </Pressable>
         <View style={styles.statCard}>
           <LinearGradient
             colors={["rgba(0, 188, 212, 0.15)", "rgba(0, 188, 212, 0.05)"]}
@@ -168,11 +187,12 @@ export default function HomeScreen() {
               </View>
             </View>
             <Pressable
-              onPress={handleCompleteWorkout}
+              onPress={handleStartWorkout}
               style={({ pressed }) => [
                 styles.todayStartBtn,
                 pressed && { opacity: 0.8 },
               ]}
+              testID="start-workout-button"
             >
               <Ionicons name="play" size={24} color={Colors.primary} />
             </Pressable>
@@ -213,7 +233,15 @@ export default function HomeScreen() {
         <>
           <Text style={styles.sectionTitle}>Exercicios de hoje</Text>
           {latestWorkout.exercises.map((ex, idx) => (
-            <View key={idx} style={styles.exerciseRow}>
+            <Pressable
+              key={idx}
+              style={({ pressed }) => [
+                styles.exerciseRow,
+                pressed && { opacity: 0.7 },
+              ]}
+              onPress={() => handleExerciseDetail(ex)}
+              testID={`exercise-item-${idx}`}
+            >
               <View style={styles.exerciseIdx}>
                 <Text style={styles.exerciseIdxText}>{idx + 1}</Text>
               </View>
@@ -223,8 +251,8 @@ export default function HomeScreen() {
                   {ex.sets} series x {ex.reps} reps
                 </Text>
               </View>
-              <Text style={styles.exerciseEquipment}>{ex.equipment}</Text>
-            </View>
+              <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+            </Pressable>
           ))}
         </>
       )}

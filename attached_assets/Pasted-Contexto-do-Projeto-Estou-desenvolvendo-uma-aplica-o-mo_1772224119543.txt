@@ -1,0 +1,57 @@
+Contexto do Projeto:
+Estou desenvolvendo uma aplicação mobile (React Native/Expo) focada em fitness. Atualmente, a Home exibe um "Treino do dia" gerado por IA com base em equipamentos. A interface segue um tema escuro (Dark Mode). Preciso refatorar a experiência do usuário e a lógica de execução do treino com três ajustes principais.
+
+Solicitação de Alterações:
+
+1. Refatoração do Fluxo de Execução do Treino (Active Workout Mode)
+
+Comportamento Atual: O botão "Play" no card "Treino do dia" marca o treino como concluído imediatamente.
+
+Novo Comportamento: Ao clicar no "Play", o app deve iniciar um modo de "Sessão Ativa".
+
+Requisitos:
+
+Crie uma "trilha" visual ou uma lista sequencial dos exercícios do dia.
+
+Cada exercício deve ter um cronômetro regressivo (Timer) baseado no tempo estipulado para aquela atividade.
+
+O exercício só pode ser marcado como check/concluído após o término do cronômetro pelo usuário.
+
+O status global de "Treino Completo" (na Home) só deve ser atualizado para true se todas as atividades da lista forem finalizadas.
+
+2. Contexto de Navegação dos Equipamentos
+
+Comportamento Atual: O card de "Equipamentos" na Home exibe a contagem total.
+
+Novo Comportamento: Ao clicar no card "Equipamentos" (onde hoje diz "2 Equipamentos"), a navegação deve levar para a tela de lista de equipamentos, mas filtrada para mostrar apenas os equipamentos necessários para o Treino do Dia atual.
+
+Lógica: Passe os IDs dos equipamentos do treino atual como parâmetro para a rota da tela de equipamentos.
+
+3. Tela de Detalhes do Exercício (Instructional View)
+
+Novo Recurso: Torne os itens da lista "Exercícios de hoje" clicáveis (ex: "Desenvolvimento de Ombros").
+
+Ação: Ao clicar em um item, navegue para uma nova tela chamada ExerciseDetailScreen.
+
+Conteúdo da Tela:
+
+Título do exercício.
+
+Área para mídia: Um player de vídeo ou um carrossel de imagens demonstrando a execução.
+
+Texto descritivo detalhado ("Passo a passo") sobre a execução correta e postura.
+
+Botão "Voltar" ou "Fechar" para retornar à lista da Home.
+
+Diretrizes de UI/UX:
+
+Mantenha a consistência visual com o print atual (fundo #0d1117 ou similar, acentos em verde neon e roxo).
+
+Use ícones e tipografia consistentes com o design existente.
+
+Dica Adicional para o seu Contexto
+Como você mencionou que a IA "monta o treino", certifique-se de que, no momento em que a IA gera o JSON do treino, ela também esteja gerando (ou buscando no seu banco de dados) os campos description, image_url ou video_url.
+
+Se esses dados ainda não existem na estrutura de dados atual, você pode adicionar esta linha ao final do prompt acima:
+
+"Atualize a interface TypeScript (ou estrutura de dados) do objeto 'Exercise' para incluir campos para instructions (string), mediaUrl (string) e duration (number, em segundos) para suportar essas novas funcionalidades."

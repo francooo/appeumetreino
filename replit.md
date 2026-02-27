@@ -37,6 +37,9 @@ A mobile fitness app built with Expo (React Native) that generates personalized 
 2. Level Selection (Beginner/Intermediate/Advanced) -> Equipment Capture
 3. AI Processing animation -> Workout Result
 4. Main App (Home, Equipment Management, Profile tabs)
+5. Active Workout: Play button -> Exercise trail with timers -> Sequential completion -> Workout saved
+6. Exercise Detail: Tap exercise -> Full instructions, stats, media placeholder
+7. Equipment Filter: Tap equipment card on Home -> Equipment tab filtered by workout needs
 
 ## Key Files
 
@@ -48,8 +51,10 @@ A mobile fitness app built with Expo (React Native) that generates personalized 
 - `app/equipment-capture.tsx` - Equipment photo/selection screen
 - `app/processing.tsx` - AI processing animation
 - `app/workout-result.tsx` - Generated workout display
+- `app/active-workout.tsx` - Active workout session with timers and exercise trail
+- `app/exercise-detail.tsx` - Exercise detail with instructions and stats
 - `app/(tabs)/index.tsx` - Home screen with today's workout
-- `app/(tabs)/add-equipment.tsx` - Equipment management
+- `app/(tabs)/add-equipment.tsx` - Equipment management (supports workout filter param)
 - `app/(tabs)/profile.tsx` - User profile
 - `contexts/AppContext.tsx` - Global state management (backend + local cache)
 - `lib/storage.ts` - AsyncStorage CRUD operations (local cache)

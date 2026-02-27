@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useLocalSearchParams } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
@@ -22,6 +23,28 @@ import type { Equipment } from "@/lib/storage";
 export default function AddEquipmentScreen() {
   const insets = useSafeAreaInsets();
   const { equipment, addUserEquipment, removeUserEquipment } = useApp();
+  const params = useLocalSearchParams<{ workoutEquipment?: string }>();
+  const [showFiltered, setShowFiltered] = useState(!!params.workoutEquipment);
+
+  const workoutEquipmentNames: string[] = useMemo(() => {
+    if (params.workoutEquipment) {
+      try {
+        return JSON.parse(params.workoutEquipment);
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  }, [params.workoutEquipment]);
+
+  const filteredEquipment = useMemo(() => {
+    if (!showFiltered || workoutEquipmentNames.length === 0) return equipment;
+    return equipment.filter((e) =>
+      workoutEquipmentNames.some(
+        (name) => e.name.toLowerCase() === name.toLowerCase()
+      )
+    );
+  }, [equipment, showFiltered, workoutEquipmentNames]);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -131,8 +154,24 @@ export default function AddEquipmentScreen() {
       ]}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.title}>Equipamentos</Text>
-      <Text style={styles.subtitle}>Gerencie seus equipamentos de treino</Text>
+      <Text style={styles.title}>
+        {showFiltered ? "Equipamentos do treino" : "Equipamentos"}
+      </Text>
+      <Text style={styles.subtitle}>
+        {showFiltered
+          ? "Equipamentos necessarios para o treino atual"
+          : "Gerencie seus equipamentos de treino"}
+      </Text>
+      {showFiltered && (
+        <Pressable
+          onPress={() => setShowFiltered(false)}
+          style={({ pressed }) => [styles.filterBtn, pressed && { opacity: 0.7 }]}
+          testID="show-all-button"
+        >
+          <Ionicons name="list" size={16} color={Colors.primary} />
+          <Text style={styles.filterBtnText}>Ver todos</Text>
+        </Pressable>
+      )}
 
       <View style={styles.cameraButtons}>
         <Pressable
@@ -164,12 +203,14 @@ export default function AddEquipmentScreen() {
         </Pressable>
       </View>
 
-      {equipment.length > 0 && (
+      {filteredEquipment.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            Meus equipamentos ({equipment.length})
+            {showFiltered
+              ? `Necessarios (${filteredEquipment.length})`
+              : `Meus equipamentos (${equipment.length})`}
           </Text>
-          {equipment.map((item) => (
+          {filteredEquipment.map((item) => (
             <View key={item.id} style={styles.equipmentItem}>
               {item.imageUri ? (
                 <Image
@@ -263,7 +304,23 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Colors.textSecondary,
     marginTop: 4,
-    marginBottom: 24,
+    marginBottom: 16,
+  },
+  filterBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(0, 200, 83, 0.1)",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    marginBottom: 16,
+  },
+  filterBtnText: {
+    fontFamily: "Rubik_600SemiBold",
+    fontSize: 14,
+    color: Colors.primary,
   },
   cameraButtons: {
     flexDirection: "row",

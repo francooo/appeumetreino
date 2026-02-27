@@ -31,6 +31,9 @@ export interface Exercise {
   reps: string;
   equipment: string;
   restSeconds: number;
+  instructions: string;
+  mediaUrl: string;
+  duration: number;
 }
 
 export interface Workout {

@@ -29,6 +29,8 @@ function RootLayoutNav() {
       <Stack.Screen name="equipment-capture" />
       <Stack.Screen name="processing" />
       <Stack.Screen name="workout-result" />
+      <Stack.Screen name="active-workout" />
+      <Stack.Screen name="exercise-detail" />
       <Stack.Screen name="(tabs)" />
     </Stack>
   );
