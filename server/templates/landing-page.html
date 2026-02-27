@@ -396,62 +396,66 @@
     <script src="https://unpkg.com/qr-code-styling@1.6.0/lib/qr-code-styling.js"></script>
     <script>
       (function () {
-        const ua = navigator.userAgent;
-        const loadingEl = document.getElementById("loading");
-        const contentEl = document.getElementById("content");
+        try {
+          var ua = navigator.userAgent;
+          var loadingEl = document.getElementById("loading");
+          var contentEl = document.getElementById("content");
 
-        const isAndroid = /Android/i.test(ua);
-        const isIOS =
-          /iPhone|iPad|iPod/i.test(ua) ||
-          (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+          var isAndroid = /Android/i.test(ua);
+          var isIOS =
+            /iPhone|iPad|iPod/i.test(ua) ||
+            (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
-        const deepLink = "exps://EXPS_URL_PLACEHOLDER";
+          var deepLink = "exps://EXPS_URL_PLACEHOLDER";
 
-        // Adjust store buttons based on platform
-        const appStoreBtn = document.getElementById("app-store-btn");
-        const playStoreBtn = document.getElementById("play-store-btn");
-        const storeButtonsContainer = document.getElementById("store-buttons");
+          var appStoreBtn = document.getElementById("app-store-btn");
+          var playStoreBtn = document.getElementById("play-store-btn");
+          var storeButtonsContainer = document.getElementById("store-buttons");
 
-        if (isIOS) {
-          playStoreBtn.className = "store-link";
-          storeButtonsContainer.appendChild(playStoreBtn);
-        } else if (isAndroid) {
-          appStoreBtn.className = "store-link";
-          storeButtonsContainer.insertBefore(playStoreBtn, appStoreBtn);
-        }
+          if (isIOS) {
+            playStoreBtn.className = "store-link";
+            storeButtonsContainer.appendChild(playStoreBtn);
+          } else if (isAndroid) {
+            appStoreBtn.className = "store-link";
+            storeButtonsContainer.insertBefore(playStoreBtn, appStoreBtn);
+          }
 
-        const qrCode = new QRCodeStyling({
-          width: 400,
-          height: 400,
-          data: deepLink,
-          dotsOptions: {
-            color: "#333333",
-            type: "rounded",
-          },
-          backgroundOptions: {
-            color: "#ffffff",
-          },
-          cornersSquareOptions: {
-            type: "extra-rounded",
-          },
-          cornersDotOptions: {
-            type: "dot",
-          },
-          qrOptions: {
-            errorCorrectionLevel: "H",
-          },
-        });
+          if (typeof QRCodeStyling !== "undefined") {
+            var qrCode = new QRCodeStyling({
+              width: 400,
+              height: 400,
+              data: deepLink,
+              dotsOptions: {
+                color: "#333333",
+                type: "rounded",
+              },
+              backgroundOptions: {
+                color: "#ffffff",
+              },
+              cornersSquareOptions: {
+                type: "extra-rounded",
+              },
+              cornersDotOptions: {
+                type: "dot",
+              },
+              qrOptions: {
+                errorCorrectionLevel: "H",
+              },
+            });
+            qrCode.append(document.getElementById("qr-code"));
+          }
 
-        qrCode.append(document.getElementById("qr-code"));
-
-        if (isAndroid || isIOS) {
-          loadingEl.style.display = "block";
-          contentEl.style.display = "none";
-          window.location.href = deepLink;
-          setTimeout(function () {
-            loadingEl.style.display = "none";
-            contentEl.style.display = "block";
-          }, 500);
+          if (isAndroid || isIOS) {
+            loadingEl.style.display = "block";
+            contentEl.style.display = "none";
+            window.location.href = deepLink;
+            setTimeout(function () {
+              loadingEl.style.display = "none";
+              contentEl.style.display = "block";
+            }, 500);
+          }
+        } catch (e) {
+          console.warn("Landing page script error:", e);
         }
       })();
     </script>
