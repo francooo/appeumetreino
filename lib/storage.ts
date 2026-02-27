@@ -10,8 +10,10 @@ const KEYS = {
 };
 
 export interface UserData {
+  id: string;
   name: string;
   email: string;
+  level?: string | null;
 }
 
 export type Level = "beginner" | "intermediate" | "advanced";

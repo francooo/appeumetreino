@@ -23,7 +23,7 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const insets = useSafeAreaInsets();
-  const { login, level, equipment } = useApp();
+  const { loginWithCredentials } = useApp();
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -35,16 +35,21 @@ export default function LoginScreen() {
     }
     setIsSubmitting(true);
     try {
-      await login({ name: email.split("@")[0], email: email.trim() });
-      if (!level) {
+      const userData = await loginWithCredentials(email.trim(), password);
+      if (!userData.level) {
         router.replace("/level-select");
-      } else if (equipment.length === 0) {
-        router.replace("/equipment-capture");
       } else {
         router.replace("/(tabs)");
       }
-    } catch {
-      Alert.alert("Erro", "Falha ao entrar");
+    } catch (e: any) {
+      const msg = e?.message || "";
+      if (msg.includes("401")) {
+        Alert.alert("Erro", "Email ou senha incorretos");
+      } else if (msg.includes("404")) {
+        Alert.alert("Erro", "Conta nao encontrada");
+      } else {
+        Alert.alert("Erro", "Falha ao entrar. Verifique sua conexao.");
+      }
     } finally {
       setIsSubmitting(false);
     }

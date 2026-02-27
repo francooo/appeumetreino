@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   pgTable,
   text,
-  varchar,
+  uuid,
   timestamp,
   integer,
   jsonb,
@@ -11,7 +11,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const users = pgTable("users", {
-  id: varchar("id")
+  id: uuid("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
@@ -23,10 +23,10 @@ export const users = pgTable("users", {
 });
 
 export const equipment = pgTable("equipment", {
-  id: varchar("id")
+  id: uuid("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  userId: varchar("user_id")
+  userId: uuid("user_id")
     .notNull()
     .references(() => users.id),
   name: text("name").notNull(),
@@ -35,10 +35,10 @@ export const equipment = pgTable("equipment", {
 });
 
 export const workouts = pgTable("workouts", {
-  id: varchar("id")
+  id: uuid("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  userId: varchar("user_id")
+  userId: uuid("user_id")
     .notNull()
     .references(() => users.id),
   name: text("name").notNull(),
@@ -49,13 +49,13 @@ export const workouts = pgTable("workouts", {
 });
 
 export const workoutHistory = pgTable("workout_history", {
-  id: varchar("id")
+  id: uuid("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  userId: varchar("user_id")
+  userId: uuid("user_id")
     .notNull()
     .references(() => users.id),
-  workoutId: varchar("workout_id").notNull(),
+  workoutId: uuid("workout_id").notNull(),
   workoutName: text("workout_name").notNull(),
   completedAt: timestamp("completed_at").defaultNow(),
   duration: integer("duration").notNull(),

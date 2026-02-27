@@ -75,9 +75,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async removeEquipment(id: string, userId: string): Promise<void> {
+    const { and } = await import("drizzle-orm");
     await db
       .delete(equipment)
-      .where(eq(equipment.id, id));
+      .where(and(eq(equipment.id, id), eq(equipment.userId, userId)));
   }
 
   async getWorkoutsByUser(userId: string): Promise<Workout[]> {

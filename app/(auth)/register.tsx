@@ -25,7 +25,7 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const insets = useSafeAreaInsets();
-  const { login } = useApp();
+  const { register } = useApp();
 
   const handleRegister = async () => {
     if (!name.trim() || !email.trim() || !password || !confirmPassword) {
@@ -45,10 +45,15 @@ export default function RegisterScreen() {
     }
     setIsSubmitting(true);
     try {
-      await login({ name: name.trim(), email: email.trim() });
+      await register(name.trim(), email.trim(), password);
       router.replace("/level-select");
-    } catch {
-      Alert.alert("Erro", "Falha ao criar conta");
+    } catch (e: any) {
+      const msg = e?.message || "";
+      if (msg.includes("409")) {
+        Alert.alert("Erro", "Este email ja esta cadastrado");
+      } else {
+        Alert.alert("Erro", "Falha ao criar conta. Verifique sua conexao.");
+      }
     } finally {
       setIsSubmitting(false);
     }
