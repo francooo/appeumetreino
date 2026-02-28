@@ -6,12 +6,14 @@ import {
   Pressable,
   Platform,
   ScrollView,
+  Image,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Colors from "@/constants/colors";
 import type { Exercise } from "@/lib/storage";
+import { getExerciseImage } from "@/lib/workout-generator";
 
 export default function ExerciseDetailScreen() {
   const insets = useSafeAreaInsets();
@@ -25,6 +27,7 @@ export default function ExerciseDetailScreen() {
   })();
 
   const instructionSteps = (exercise.instructions || "").split("\n").filter(Boolean);
+  const exerciseImage = getExerciseImage(exercise.name);
 
   const formatDuration = (seconds: number) => {
     if (!seconds) return "--";
@@ -52,10 +55,18 @@ export default function ExerciseDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.mediaArea}>
-          <View style={styles.mediaPlaceholder}>
-            <Ionicons name="fitness" size={56} color={Colors.primary} />
-            <Text style={styles.mediaText}>Demonstracao em breve</Text>
-          </View>
+          {exerciseImage ? (
+            <Image
+              source={exerciseImage}
+              style={styles.mediaImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.mediaPlaceholder}>
+              <Ionicons name="fitness" size={56} color={Colors.primary} />
+              <Text style={styles.mediaText}>Imagem indisponivel</Text>
+            </View>
+          )}
         </View>
 
         <Text style={styles.exerciseName}>{exercise.name}</Text>
@@ -144,8 +155,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: "hidden",
   },
+  mediaImage: {
+    width: "100%",
+    height: 220,
+    borderRadius: 20,
+  },
   mediaPlaceholder: {
-    height: 200,
+    height: 220,
     backgroundColor: Colors.card,
     borderRadius: 20,
     justifyContent: "center",

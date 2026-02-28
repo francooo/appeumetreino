@@ -313,6 +313,46 @@ const WORKOUT_NAMES = [
   "Treino Circuito",
 ];
 
+const EXERCISE_IMAGES: Record<string, string> = {
+  "Rosca Biceps": require("@/assets/images/exercises/rosca-biceps.png"),
+  "Desenvolvimento de Ombros": require("@/assets/images/exercises/desenvolvimento-ombros.png"),
+  "Remada Unilateral": require("@/assets/images/exercises/remada-unilateral.png"),
+  "Agachamento com Halteres": require("@/assets/images/exercises/agachamento-halteres.png"),
+  "Supino com Halteres": require("@/assets/images/exercises/supino-halteres.png"),
+  "Elevacao Lateral": require("@/assets/images/exercises/elevacao-lateral.png"),
+  "Supino Reto": require("@/assets/images/exercises/supino-reto.png"),
+  "Agachamento Livre": require("@/assets/images/exercises/agachamento-livre.png"),
+  "Remada Curvada": require("@/assets/images/exercises/remada-curvada.png"),
+  "Desenvolvimento Militar": require("@/assets/images/exercises/desenvolvimento-militar.png"),
+  "Barra Fixa": require("@/assets/images/exercises/barra-fixa.png"),
+  "Chin-up": require("@/assets/images/exercises/chin-up.png"),
+  "Pendurado na Barra (Abs)": require("@/assets/images/exercises/pendurado-barra.png"),
+  "Puxada com Elastico": require("@/assets/images/exercises/puxada-elastico.png"),
+  "Rosca com Elastico": require("@/assets/images/exercises/rosca-elastico.png"),
+  "Agachamento com Elastico": require("@/assets/images/exercises/agachamento-elastico.png"),
+  "Abduo com Elastico": require("@/assets/images/exercises/abduo-elastico.png"),
+  "Supino no Banco": require("@/assets/images/exercises/supino-banco.png"),
+  "Step-up no Banco": require("@/assets/images/exercises/step-up-banco.png"),
+  "Triceps no Banco": require("@/assets/images/exercises/triceps-banco.png"),
+  "Swing com Kettlebell": require("@/assets/images/exercises/swing-kettlebell.png"),
+  "Goblet Squat": require("@/assets/images/exercises/goblet-squat.png"),
+  "Clean & Press": require("@/assets/images/exercises/clean-press.png"),
+  "Turkish Get-up": require("@/assets/images/exercises/turkish-getup.png"),
+  "Prancha": require("@/assets/images/exercises/prancha.png"),
+  "Abdominal": require("@/assets/images/exercises/abdominal.png"),
+  "Flexao de Bracos": require("@/assets/images/exercises/flexao-bracos.png"),
+  "Ponte de Gluteos": require("@/assets/images/exercises/ponte-gluteos.png"),
+  "Pular Corda (Basico)": require("@/assets/images/exercises/pular-corda-basico.png"),
+  "Pular Corda (Duplo)": require("@/assets/images/exercises/pular-corda-duplo.png"),
+  "Burpees": require("@/assets/images/exercises/burpees.png"),
+  "Polichinelos": require("@/assets/images/exercises/polichinelos.png"),
+  "Afundo": require("@/assets/images/exercises/afundo.png"),
+};
+
+export function getExerciseImage(name: string): number | null {
+  return EXERCISE_IMAGES[name] || null;
+}
+
 function detectEquipmentType(name: string): string {
   const lower = name.toLowerCase();
   if (lower.includes("halter") || lower.includes("dumbbell")) return "dumbbell";
