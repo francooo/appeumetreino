@@ -79,20 +79,33 @@ export default function VisionResultScreen() {
   };
 
   const handleStartWorkout = async () => {
-    const workout = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      name: `Treino - ${data.equipment_name}`,
-      exercises: data.suggested_exercises.map((ex) => ({
+    const exercises = data.suggested_exercises.map((ex) => {
+      const repsStr = typeof ex.reps === "number" ? String(ex.reps) : ex.reps;
+      const repTime = repsStr.includes("s")
+        ? parseInt(repsStr) || 30
+        : (parseInt(repsStr) || 12) * 3;
+      const duration = ex.sets * (repTime + ex.rest_seconds);
+      return {
         name: ex.name,
         sets: ex.sets,
-        reps: typeof ex.reps === "number" ? String(ex.reps) : ex.reps,
+        reps: repsStr,
         rest: `${ex.rest_seconds}s`,
+        restSeconds: ex.rest_seconds,
         equipment: data.equipment_name,
         instructions: ex.description,
         mediaUrl: "",
-        duration: 0,
-      })),
-      duration: `${Math.round(data.suggested_exercises.length * 5)} min`,
+        duration,
+      };
+    });
+
+    const totalSeconds = exercises.reduce((sum, e) => sum + e.duration, 0);
+    const durationMin = Math.max(1, Math.round(totalSeconds / 60));
+
+    const workout = {
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      name: `Treino - ${data.equipment_name}`,
+      exercises,
+      duration: `${durationMin} min`,
       level: "intermediate",
       equipment: [data.equipment_name],
       createdAt: Date.now(),
