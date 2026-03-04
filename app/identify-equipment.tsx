@@ -15,7 +15,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
-import * as FileSystem from "expo-file-system";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { apiRequest } from "@/lib/query-client";
@@ -68,31 +67,32 @@ export default function IdentifyEquipmentScreen() {
     outputRange: ["0deg", "360deg"],
   });
 
-  const convertToBase64 = async (uri: string): Promise<string> => {
-    if (Platform.OS === "web") {
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const result = reader.result as string;
-          resolve(result);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    }
-    const base64 = await FileSystem.readAsStringAsync(uri, {
-      encoding: FileSystem.EncodingType.Base64,
+  const convertToBase64Web = async (uri: string): Promise<string> => {
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        resolve(result);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
     });
-    return `data:image/jpeg;base64,${base64}`;
   };
 
-  const analyzeImage = async (uri: string) => {
+  const analyzeImage = async (uri: string, base64Data?: string | null) => {
     setIsAnalyzing(true);
     setError(null);
     try {
-      const base64Image = await convertToBase64(uri);
+      let base64Image: string;
+      if (base64Data) {
+        base64Image = `data:image/jpeg;base64,${base64Data}`;
+      } else if (Platform.OS === "web") {
+        base64Image = await convertToBase64Web(uri);
+      } else {
+        throw new Error("Base64 data not available");
+      }
       const response = await apiRequest("POST", "/api/vision/identify", {
         image: base64Image,
       });
@@ -166,10 +166,13 @@ export default function IdentifyEquipmentScreen() {
         return;
       }
     }
-    const result = await ImagePicker.launchCameraAsync({ quality: 0.8 });
+    const result = await ImagePicker.launchCameraAsync({
+      quality: 0.8,
+      base64: true,
+    });
     if (!result.canceled && result.assets[0]) {
       setImageUri(result.assets[0].uri);
-      analyzeImage(result.assets[0].uri);
+      analyzeImage(result.assets[0].uri, result.assets[0].base64);
     }
   };
 
@@ -209,10 +212,11 @@ export default function IdentifyEquipmentScreen() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
+      base64: true,
     });
     if (!result.canceled && result.assets[0]) {
       setImageUri(result.assets[0].uri);
-      analyzeImage(result.assets[0].uri);
+      analyzeImage(result.assets[0].uri, result.assets[0].base64);
     }
   };
 
