@@ -229,6 +229,26 @@ export default function HomeScreen() {
         </View>
       </Pressable>
 
+      <Pressable
+        onPress={() => router.push("/identify-equipment")}
+        style={({ pressed }) => [
+          styles.identifyBtn,
+          pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] },
+        ]}
+        testID="identify-equipment-button"
+      >
+        <LinearGradient
+          colors={["rgba(0, 188, 212, 0.12)", "rgba(0, 200, 83, 0.12)"]}
+          style={styles.identifyBtnGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+        >
+          <Ionicons name="scan" size={20} color={Colors.secondary} />
+          <Text style={styles.identifyBtnText}>Identificar equipamento</Text>
+          <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+        </LinearGradient>
+      </Pressable>
+
       {latestWorkout && (
         <>
           <Text style={styles.sectionTitle}>Exercicios de hoje</Text>
@@ -440,6 +460,26 @@ const styles = StyleSheet.create({
     fontFamily: "Rubik_600SemiBold",
     fontSize: 16,
     color: Colors.primary,
+  },
+  identifyBtn: {
+    borderRadius: 14,
+    overflow: "hidden",
+    marginBottom: 28,
+    borderWidth: 1,
+    borderColor: Colors.secondary,
+  },
+  identifyBtnGradient: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 10,
+    paddingVertical: 14,
+  },
+  identifyBtnText: {
+    fontFamily: "Rubik_600SemiBold",
+    fontSize: 16,
+    color: Colors.secondary,
+    flex: 1,
   },
   sectionTitle: {
     fontFamily: "Rubik_700Bold",

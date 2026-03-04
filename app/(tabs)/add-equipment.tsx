@@ -12,7 +12,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
@@ -202,6 +202,26 @@ export default function AddEquipmentScreen() {
           </View>
         </Pressable>
       </View>
+
+      <Pressable
+        onPress={() => router.push("/identify-equipment")}
+        style={({ pressed }) => [
+          styles.aiIdentifyBtn,
+          pressed && { opacity: 0.8 },
+        ]}
+        testID="ai-identify-button"
+      >
+        <View style={styles.aiIdentifyInner}>
+          <Ionicons name="scan" size={20} color={Colors.secondary} />
+          <View style={styles.aiIdentifyTextContainer}>
+            <Text style={styles.aiIdentifyTitle}>Identificar com IA</Text>
+            <Text style={styles.aiIdentifySubtitle}>
+              Tire uma foto e descubra exercicios
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+        </View>
+      </Pressable>
 
       {filteredEquipment.length > 0 && (
         <View style={styles.section}>
@@ -447,5 +467,35 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 8,
     right: 8,
+  },
+  aiIdentifyBtn: {
+    marginBottom: 24,
+    borderRadius: 14,
+    overflow: "hidden",
+  },
+  aiIdentifyInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: "rgba(0, 188, 212, 0.08)",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.secondary,
+  },
+  aiIdentifyTextContainer: {
+    flex: 1,
+    gap: 2,
+  },
+  aiIdentifyTitle: {
+    fontFamily: "Rubik_600SemiBold",
+    fontSize: 15,
+    color: Colors.secondary,
+  },
+  aiIdentifySubtitle: {
+    fontFamily: "Rubik_400Regular",
+    fontSize: 12,
+    color: Colors.textSecondary,
   },
 });

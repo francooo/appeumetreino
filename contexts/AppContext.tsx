@@ -25,6 +25,8 @@ interface AppContextValue {
   equipment: Equipment[];
   workouts: Workout[];
   history: WorkoutHistory[];
+  visionResult: any | null;
+  setVisionResult: (result: any | null) => void;
   setOnboarded: () => Promise<void>;
   login: (user: UserData) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<UserData>;
@@ -49,6 +51,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [equipment, setEquipmentState] = useState<Equipment[]>([]);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [history, setHistory] = useState<WorkoutHistory[]>([]);
+  const [visionResult, setVisionResult] = useState<any | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -237,6 +240,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       equipment,
       workouts,
       history,
+      visionResult,
+      setVisionResult,
       setOnboarded,
       login,
       register,
@@ -258,6 +263,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       equipment,
       workouts,
       history,
+      visionResult,
       setOnboarded,
       login,
       register,

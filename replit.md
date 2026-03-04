@@ -29,6 +29,7 @@ A mobile fitness app built with Expo (React Native) that generates personalized 
 - `DELETE /api/user/:userId/equipment/:id` - Remove equipment
 - `GET/POST /api/user/:id/workouts` - List/save workouts
 - `GET/POST /api/user/:id/history` - List/add workout history
+- `POST /api/vision/identify` - AI equipment recognition via Gemini Vision (accepts base64 image, returns equipment name, confidence, suggested exercises with muscle groups)
 - `GET /api/health` - Health check with DB status
 
 ## App Flow
@@ -40,6 +41,7 @@ A mobile fitness app built with Expo (React Native) that generates personalized 
 5. Active Workout: Play button -> Exercise trail with timers -> Sequential completion -> Workout saved
 6. Exercise Detail: Tap exercise -> Full instructions, stats, media placeholder
 7. Equipment Filter: Tap equipment card on Home -> Equipment tab filtered by workout needs
+8. AI Equipment Recognition: Camera/gallery -> Gemini Vision API -> Equipment identified with exercises + muscle map visualization
 
 ## Key Files
 
@@ -53,6 +55,9 @@ A mobile fitness app built with Expo (React Native) that generates personalized 
 - `app/workout-result.tsx` - Generated workout display
 - `app/active-workout.tsx` - Active workout session with timers and exercise trail
 - `app/exercise-detail.tsx` - Exercise detail with instructions and stats
+- `app/identify-equipment.tsx` - AI equipment recognition camera/gallery capture screen
+- `app/vision-result.tsx` - AI recognition results with exercise cards and muscle map
+- `components/MuscleMap.tsx` - SVG muscle map component (front/back body views)
 - `app/(tabs)/index.tsx` - Home screen with today's workout
 - `app/(tabs)/add-equipment.tsx` - Equipment management (supports workout filter param)
 - `app/(tabs)/profile.tsx` - User profile
@@ -77,3 +82,6 @@ A mobile fitness app built with Expo (React Native) that generates personalized 
 - bcryptjs for password hashing
 - expo-auth-session, expo-crypto for Google Sign-In
 - drizzle-orm, pg for database access
+- @google/generative-ai for Gemini Vision API (equipment recognition)
+- react-native-svg for muscle map SVG visualization
+- expo-file-system for image base64 conversion

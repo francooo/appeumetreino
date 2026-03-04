@@ -8,6 +8,7 @@ import {
   loginSchema,
   googleAuthSchema,
 } from "@shared/schema";
+import { geminiModel } from "./gemini";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/health", async (_req: Request, res: Response) => {
@@ -258,6 +259,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Add history error:", error);
       res.status(500).json({ message: "Erro ao adicionar historico" });
+    }
+  });
+
+  app.post("/api/vision/identify", async (req: Request, res: Response) => {
+    try {
+      const { image } = req.body;
+      if (!image) {
+        return res.status(400).json({ message: "Imagem e obrigatoria" });
+      }
+
+      const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+
+      const prompt = `Você é um especialista em fitness e equipamentos de treino. Analise esta imagem e identifique equipamento(s) de exercício presentes.
+
+IMPORTANTE: Considere tanto equipamentos tradicionais de academia (halteres, barras, bancos, elásticos, etc.) quanto objetos do cotidiano que podem ser usados como equipamento improvisado (garrafas d'água como pesos, cadeiras para apoio, escadas, mochilas com peso, toalhas como faixas, etc.).
+
+Responda EXCLUSIVAMENTE em JSON válido com esta estrutura:
+{
+  "equipment_name": "nome do equipamento em português",
+  "confidence": número de 0 a 100,
+  "suggested_exercises": [
+    {
+      "name": "nome do exercício em português",
+      "description": "instrução detalhada de execução em português brasileiro, passo a passo",
+      "muscles_primary": ["músculo principal 1", "músculo principal 2"],
+      "muscles_secondary": ["músculo secundário 1"],
+      "sets": número de séries (3-5),
+      "reps": "número de repetições ou duração (ex: '12' ou '30 segundos')",
+      "rest_seconds": segundos de descanso entre séries (30-90)
+    }
+  ]
+}
+
+Regras:
+- Sugira entre 4 e 6 exercícios variados para o equipamento identificado
+- Use nomes de músculos padronizados: peito, ombros, biceps, triceps, costas_superiores, costas_inferiores, abdomen, quadriceps, isquiotibiais, gluteos, panturrilhas, antebracos
+- As instruções devem ser detalhadas e em português brasileiro
+- Se não conseguir identificar um equipamento de exercício, responda com confidence menor que 50
+- Retorne APENAS o JSON, sem markdown ou texto adicional`;
+
+      const result = await geminiModel.generateContent([
+        {
+          inlineData: {
+            mimeType: "image/jpeg",
+            data: base64Data,
+          },
+        },
+        prompt,
+      ]);
+
+      const responseText = result.response.text();
+
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        return res.status(500).json({ message: "Resposta da IA invalida" });
+      }
+
+      const parsed = JSON.parse(jsonMatch[0]);
+
+      const response = {
+        ...parsed,
+        low_confidence: (parsed.confidence || 0) < 70,
+      };
+
+      res.json(response);
+    } catch (error) {
+      console.error("Vision identify error:", error);
+      res.status(500).json({
+        message: "Erro ao processar imagem",
+        error: String(error),
+      });
     }
   });
 

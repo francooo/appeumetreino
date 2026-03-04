@@ -31,6 +31,8 @@ function RootLayoutNav() {
       <Stack.Screen name="workout-result" />
       <Stack.Screen name="active-workout" />
       <Stack.Screen name="exercise-detail" />
+      <Stack.Screen name="identify-equipment" />
+      <Stack.Screen name="vision-result" />
       <Stack.Screen name="(tabs)" />
     </Stack>
   );
