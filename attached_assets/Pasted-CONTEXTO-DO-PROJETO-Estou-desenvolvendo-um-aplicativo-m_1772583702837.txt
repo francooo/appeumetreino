@@ -1,0 +1,75 @@
+CONTEXTO DO PROJETO
+Estou desenvolvendo um aplicativo mobile chamado "Eu Me Treino". O app tem como propósito ajudar usuários a praticarem exercícios físicos utilizando os equipamentos, pesos e materiais que já possuem disponíveis, sejam em academia, em casa ou em qualquer ambiente.
+
+FUNCIONALIDADE A SER DESENVOLVIDA
+Preciso que você desenvolva, de ponta a ponta, a funcionalidade de reconhecimento inteligente de equipamentos via imagem, com as seguintes capacidades:
+
+REQUISITOS FUNCIONAIS
+1. Captura e envio de imagem
+
+O usuário deve poder tirar uma foto ou selecionar uma imagem da galeria do dispositivo
+A imagem deve ser enviada para processamento via IA (visão computacional)
+Suportar múltiplos equipamentos na mesma foto quando possível
+
+2. Reconhecimento do equipamento
+
+Identificar o equipamento, peso ou material presente na imagem (ex: haltere, kettlebell, barra, elástico, garrafa d'água, cadeira, etc.)
+Retornar o nome do equipamento identificado com nível de confiança
+Caso não reconheça, solicitar ao usuário que tire uma nova foto ou descreva manualmente
+
+3. Sugestão de exercícios
+Para cada equipamento identificado, o sistema deve retornar:
+
+Lista de exercícios possíveis com aquele equipamento
+Descrição textual de como executar cada exercício (séries, repetições, postura)
+Músculos trabalhados em cada exercício, com destaque dos músculos primários e secundários
+Imagem ou vídeo ilustrativo de cada exercício (pode ser via URL de banco de dados próprio, YouTube embed, ou biblioteca open source de exercícios como ExerciseDB ou Wger)
+
+4. Visualização dos músculos no corpo
+
+Exibir uma representação visual do corpo humano (frente e costas) destacando os músculos que serão trabalhados pelo exercício selecionado
+Os músculos primários devem ser destacados em uma cor (ex: vermelho) e os secundários em outra (ex: laranja/amarelo)
+
+
+REQUISITOS TÉCNICOS
+
+IA de visão: Utilizar a API da Anthropic (Claude com suporte a visão) ou alternativa como Google Vision AI / OpenAI Vision para o reconhecimento da imagem
+Banco de exercícios: Integrar com uma API de exercícios (sugestão: ExerciseDB via RapidAPI, ou Wger REST API) para buscar exercícios, músculos e mídias relacionadas
+Modelo de prompt para visão: O prompt enviado à IA de visão deve instrui-la a:
+
+Identificar o(s) equipamento(s) na imagem
+Retornar a resposta em JSON estruturado com: equipment_name, confidence, suggested_exercises[]
+Cada exercício deve conter: name, description, muscles_primary[], muscles_secondary[], media_url
+
+
+Frontend: Tela de resultado clara, com carrossel de exercícios, card de músculos e player de vídeo/imagem embutido
+Fallback: Caso a IA não identifique o equipamento com confiança acima de 70%, exibir uma busca manual por texto
+
+
+FLUXO ESPERADO DO USUÁRIO
+1. Usuário abre o app e acessa "Identificar Equipamento"
+2. Tira foto ou seleciona imagem do equipamento
+3. App envia imagem para a IA de visão
+4. IA retorna o equipamento identificado + lista de exercícios
+5. App exibe tela de resultado com:
+   - Nome do equipamento
+   - Cards de exercícios sugeridos
+   - Para cada exercício: descrição, vídeo/imagem, músculos destacados no corpo
+6. Usuário seleciona um exercício e pode iniciar o treino
+
+ENTREGÁVEIS ESPERADOS DO AGENTE
+
+Arquitetura da funcionalidade (diagrama ou descrição dos componentes)
+Prompt otimizado para envio à IA de visão (system prompt + user prompt com a imagem)
+Estrutura do JSON de resposta da IA
+Integração com API de exercícios (código de consumo e mapeamento de dados)
+Componentes de UI para: tela de captura, tela de resultado, card de exercício, visualização de músculos
+Tratamento de erros e fallback para reconhecimento com baixa confiança
+
+
+RESTRIÇÕES E OBSERVAÇÕES
+
+O app deve funcionar para equipamentos convencionais de academia e objetos do cotidiano que possam ser usados como equipamento (garrafa, mochila, cadeira, escada, etc.)
+A experiência deve ser rápida: o reconhecimento + exibição de resultado deve ocorrer em menos de 5 segundos
+A solução deve ser escalável para suportar novos equipamentos sem grandes refatorações
+Priorizar acessibilidade: descrições de exercícios devem ser claras para iniciantes

@@ -1,0 +1,78 @@
+Objective
+Desenvolver a funcionalidade de reconhecimento inteligente de equipamentos via imagem com IA (Google Gemini Vision), retornando exercícios sugeridos com instruções detalhadas, visualização de músculos no corpo humano (frente e costas), e integração completa no fluxo do app "Eu Me Treino". Toda a UI em português brasileiro. Usar a chave de API do Gemini que o usuário já forneceu.
+
+Tasks
+T001: Configurar Google Gemini no backend
+Blocked By: []
+Details:
+Solicitar ao usuário a chave de API do Gemini (não encontrada nos secrets atuais) e configurar como secret GEMINI_API_KEY
+Instalar pacote @google/generative-ai no backend
+Criar arquivo server/gemini.ts com client Gemini configurado usando a chave de API
+Exportar instância do modelo gemini-2.5-flash (suporta visão/imagem)
+Files: server/gemini.ts
+Acceptance: Client Gemini configurado e exportando modelo pronto para uso com imagens
+T002: Criar endpoint de reconhecimento de equipamento via imagem
+Blocked By: [T001]
+Details:
+Criar endpoint POST /api/vision/identify em server/routes.ts
+Aceitar imagem em base64 no body da requisição
+Enviar para Gemini Vision com prompt otimizado que:
+Identifica equipamento(s) de academia/exercício na imagem (incluindo objetos adaptáveis como garrafas, cadeiras, escadas, mochilas)
+Retorna JSON estruturado com: equipment_name, confidence (0-100), suggested_exercises[]
+Cada exercício contém: name, description (instrução detalhada em pt-BR), muscles_primary[], muscles_secondary[], sets, reps, rest_seconds
+Fallback: se confiança < 70%, retornar flag low_confidence: true para o frontend tratar
+Tratamento de erros robusto
+Files: server/routes.ts
+Acceptance: Endpoint retorna JSON com equipamento identificado e exercícios sugeridos
+T003: Criar tela de captura de equipamento com IA
+Blocked By: []
+Details:
+Criar app/identify-equipment.tsx - tela de captura dedicada ao reconhecimento IA
+Botões: "Tirar foto" (câmera) e "Escolher da galeria"
+Após captura, converter imagem para base64 e mostrar preview
+Enviar para o endpoint /api/vision/identify
+Estado de loading com animação durante processamento
+Se low_confidence, mostrar alerta pedindo nova foto ou permitir escolher outro
+Após sucesso, navegar para tela de resultado com os dados retornados
+Design: tema escuro (#0A0F1C), verde (#00C853) e teal (#00BCD4)
+Files: app/identify-equipment.tsx, app/_layout.tsx
+Acceptance: Usuário tira foto, vê loading, recebe resultado ou alerta de baixa confiança
+T004: Criar componente SVG de mapa muscular (frente e costas)
+Blocked By: []
+Details:
+Instalar react-native-svg se necessário
+Criar components/MuscleMap.tsx com duas views: frente e costas do corpo humano
+SVG simplificado mas anatomicamente reconhecível com os principais grupos musculares:
+Frente: peito, ombros, bíceps, abdômen, quadríceps, antebraços
+Costas: costas superiores, costas inferiores, tríceps, glúteos, isquiotibiais, panturrilhas
+Props: primaryMuscles: string[], secondaryMuscles: string[]
+Músculos primários em verde (#00C853), secundários em teal (#00BCD4), inativos em cinza escuro
+Toggle para alternar entre vista frontal e traseira
+Files: components/MuscleMap.tsx
+Acceptance: Componente renderiza corpo humano com músculos coloridos conforme props
+T005: Criar tela de resultado do reconhecimento
+Blocked By: [T002, T003, T004]
+Details:
+Criar app/vision-result.tsx - tela que exibe o resultado completo
+Layout:
+Header com nome do equipamento identificado e badge de confiança
+Carrossel horizontal de cards de exercícios sugeridos
+Cada card mostra: nome, descrição curta, tags de músculos
+Ao selecionar um exercício: expande para mostrar instruções completas, sets/reps/descanso
+Componente MuscleMap mostrando músculos do exercício selecionado (primários e secundários)
+Botão "Adicionar equipamento" para salvar na lista do usuário
+Botão "Iniciar treino" para criar workout com os exercícios sugeridos
+Recebe dados via route params (JSON stringified)
+Design: tema escuro, cards com borda verde, tipografia Rubik
+Files: app/vision-result.tsx, app/_layout.tsx
+Acceptance: Tela exibe equipamento, carrossel de exercícios, mapa muscular interativo
+T006: Integrar acesso à funcionalidade no app
+Blocked By: [T005]
+Details:
+Adicionar botão "Identificar Equipamento" na Home screen (abaixo do botão "Gerar novo treino")
+Estilo: botão com ícone de câmera/scan, borda gradient, texto "Identificar equipamento"
+Ao clicar, navegar para app/identify-equipment.tsx
+Também adicionar botão na tela de equipamentos (add-equipment.tsx) como opção de adicionar via IA
+Registrar novas rotas no app/_layout.tsx
+Files: app/(tabs)/index.tsx, app/(tabs)/add-equipment.tsx, app/_layout.tsx
+Acceptance: Botão visível na Home e na tela de equipamentos, navegação funciona corretamente
