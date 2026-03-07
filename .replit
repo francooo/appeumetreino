@@ -73,5 +73,3 @@ ensurePreviewReachable = "/status"
 [userenv]
 
 [userenv.shared]
-GEMINI_API_KEY = "AIzaSyAvENBJKEfcB5McZ_k8WSOTufK19fDg3hI"
-DATABASE_URL = "postgresql://neondb_owner:npg_f4PWETX6QOHD@ep-sweet-bird-ainkqkkk-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
