@@ -37,6 +37,7 @@ export default function ActiveWorkoutScreen() {
   const [timerStarted, setTimerStarted] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const scrollRef = useRef<ScrollView>(null);
+  const exerciseStatesRef = useRef<Record<number, { timeLeft: number; timerStarted: boolean; isPaused: boolean }>>({});
 
   const currentExercise = exercises[currentIndex];
   const allCompleted = completedIndices.size === exercises.length;
@@ -96,6 +97,7 @@ export default function ActiveWorkoutScreen() {
     const newCompleted = new Set(completedIndices);
     newCompleted.add(currentIndex);
     setCompletedIndices(newCompleted);
+    delete exerciseStatesRef.current[currentIndex];
 
     if (newCompleted.size === exercises.length) {
       return;
@@ -107,10 +109,18 @@ export default function ActiveWorkoutScreen() {
     }
     if (nextIdx < exercises.length) {
       setCurrentIndex(nextIdx);
-      setTimeLeft(exercises[nextIdx].duration);
-      setIsRunning(false);
-      setIsPaused(false);
-      setTimerStarted(false);
+      const saved = exerciseStatesRef.current[nextIdx];
+      if (saved) {
+        setTimeLeft(saved.timeLeft);
+        setTimerStarted(saved.timerStarted);
+        setIsPaused(saved.isPaused);
+        setIsRunning(false);
+      } else {
+        setTimeLeft(exercises[nextIdx].duration);
+        setIsRunning(false);
+        setIsPaused(false);
+        setTimerStarted(false);
+      }
     }
   }, [currentIndex, completedIndices, exercises]);
 
@@ -153,12 +163,25 @@ export default function ActiveWorkoutScreen() {
   };
 
   const selectExercise = (idx: number) => {
-    if (completedIndices.has(idx)) return;
+    if (completedIndices.has(idx) || idx === currentIndex) return;
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    exerciseStatesRef.current[currentIndex] = { timeLeft, timerStarted, isPaused: isPaused || isRunning };
     setCurrentIndex(idx);
-    setTimeLeft(exercises[idx].duration);
-    setIsRunning(false);
-    setIsPaused(false);
-    setTimerStarted(false);
+    const saved = exerciseStatesRef.current[idx];
+    if (saved) {
+      setTimeLeft(saved.timeLeft);
+      setTimerStarted(saved.timerStarted);
+      setIsPaused(saved.isPaused);
+      setIsRunning(false);
+    } else {
+      setTimeLeft(exercises[idx].duration);
+      setIsRunning(false);
+      setIsPaused(false);
+      setTimerStarted(false);
+    }
   };
 
   return (
