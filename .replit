@@ -73,4 +73,4 @@ ensurePreviewReachable = "/status"
 [userenv]
 
 [userenv.shared]
-DATABASE_URL = "postgresql://neondb_owner:SUA_NOVA_SENHA@ep-sweet-bird-ainkqkkk-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+DATABASE_URL = "postgresql://neondb_owner:npg_f4PWETX6QOHD@ep-sweet-bird-ainkqkkk-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
