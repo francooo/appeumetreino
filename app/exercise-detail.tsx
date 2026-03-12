@@ -7,6 +7,7 @@ import {
   Platform,
   ScrollView,
   Image,
+  Linking,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -27,7 +28,7 @@ export default function ExerciseDetailScreen() {
   })();
 
   const instructionSteps = (exercise.instructions || "").split("\n").filter(Boolean);
-  const exerciseImage = getExerciseImage(exercise.name);
+  const exerciseImage = getExerciseImage(exercise.name, exercise.equipment);
 
   const formatDuration = (seconds: number) => {
     if (!seconds) return "--";
@@ -112,6 +113,25 @@ export default function ExerciseDetailScreen() {
               <Text style={styles.stepText}>{step.replace(/^\d+\.\s*/, "")}</Text>
             </View>
           ))}
+        </View>
+
+        <View style={styles.videoSection}>
+          <Text style={styles.sectionTitle}>Video demonstrativo</Text>
+          <Pressable
+            onPress={() => {
+              const query = encodeURIComponent(`${exercise.name} exercicio como fazer`);
+              const url = `https://www.youtube.com/results?search_query=${query}`;
+              Linking.canOpenURL(url).then((supported) => {
+                if (supported) Linking.openURL(url);
+              }).catch(() => {});
+            }}
+            style={({ pressed }) => [styles.videoBtn, pressed && { opacity: 0.8 }]}
+            testID="youtube-button"
+          >
+            <Ionicons name="logo-youtube" size={24} color="#FF0000" />
+            <Text style={styles.videoBtnText}>Assistir no YouTube</Text>
+            <Ionicons name="open-outline" size={18} color={Colors.textSecondary} />
+          </Pressable>
         </View>
       </ScrollView>
     </View>
@@ -229,6 +249,26 @@ const styles = StyleSheet.create({
   },
   instructionsSection: {
     gap: 12,
+  },
+  videoSection: {
+    marginTop: 28,
+    gap: 12,
+  },
+  videoBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: Colors.card,
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  videoBtnText: {
+    flex: 1,
+    fontFamily: "Rubik_600SemiBold",
+    fontSize: 15,
+    color: Colors.text,
   },
   sectionTitle: {
     fontFamily: "Rubik_700Bold",

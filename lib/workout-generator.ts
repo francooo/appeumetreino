@@ -313,7 +313,7 @@ const WORKOUT_NAMES = [
   "Treino Circuito",
 ];
 
-const EXERCISE_IMAGES: Record<string, string> = {
+const EXERCISE_IMAGES: Record<string, number> = {
   "Rosca Biceps": require("@/assets/images/exercises/rosca-biceps.png"),
   "Desenvolvimento de Ombros": require("@/assets/images/exercises/desenvolvimento-ombros.png"),
   "Remada Unilateral": require("@/assets/images/exercises/remada-unilateral.png"),
@@ -349,8 +349,27 @@ const EXERCISE_IMAGES: Record<string, string> = {
   "Afundo": require("@/assets/images/exercises/afundo.png"),
 };
 
-export function getExerciseImage(name: string): number | null {
-  return EXERCISE_IMAGES[name] || null;
+const CATEGORY_IMAGES: Record<string, number> = {
+  cardio: require("@/assets/images/exercises/category-cardio.png"),
+  forca: require("@/assets/images/exercises/category-forca.png"),
+  corpo: require("@/assets/images/exercises/category-corpo.png"),
+  alongamento: require("@/assets/images/exercises/category-alongamento.png"),
+  geral: require("@/assets/images/exercises/category-geral.png"),
+};
+
+function detectExerciseCategory(name: string, equipment?: string): string {
+  const lower = (name + " " + (equipment || "")).toLowerCase();
+  if (/cicl|bike|biciclet|pedal|spin|cardio|corrida|caminhad|trote|hiit|interval|aerob/.test(lower)) return "cardio";
+  if (/along|stretch|flexibil|mobil|yoga|recupera|desaquec/.test(lower)) return "alongamento";
+  if (/corpo|bodyweight|calisteni|prancha|flexao|abdomin|burpee|polichinelo|afundo/.test(lower)) return "corpo";
+  if (/halter|barra|kettlebell|supino|remada|desenvolvimento|rosca|elevacao|swing|clean|press|agachamento.*halter|agachamento.*barra/.test(lower)) return "forca";
+  return "geral";
+}
+
+export function getExerciseImage(name: string, equipment?: string): number | null {
+  if (EXERCISE_IMAGES[name]) return EXERCISE_IMAGES[name];
+  const category = detectExerciseCategory(name, equipment);
+  return CATEGORY_IMAGES[category] || CATEGORY_IMAGES.geral;
 }
 
 function detectEquipmentType(name: string): string {
