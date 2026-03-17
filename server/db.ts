@@ -2,20 +2,26 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import * as schema from "@shared/schema";
 
-const dbUrl = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
+let dbUrl = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
 
 if (!dbUrl) {
   throw new Error("NEON_DATABASE_URL or DATABASE_URL must be set");
 }
 
+// Neon: channel_binding=require pode falhar com algumas versões do pg; usar prefer
+if (dbUrl.includes("channel_binding=require")) {
+  dbUrl = dbUrl.replace("channel_binding=require", "channel_binding=prefer");
+}
+
 const pool = new pg.Pool({
   connectionString: dbUrl,
-  ssl: {
-    rejectUnauthorized: false,
-  },
+  ssl:
+    dbUrl.includes("sslmode=require") || dbUrl.includes("neon.tech")
+      ? { rejectUnauthorized: false }
+      : false,
   max: 10,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
+  connectionTimeoutMillis: 15000,
 });
 
 pool.on("error", (err) => {

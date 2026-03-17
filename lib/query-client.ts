@@ -1,20 +1,39 @@
 import { fetch } from "expo/fetch";
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import Constants from "expo-constants";
+
+const API_PORT = "5000";
 
 /**
- * Gets the base URL for the Express API server (e.g., "http://localhost:3000")
+ * Gets the base URL for the Express API server.
+ * Em desenvolvimento com Expo Go: usa o mesmo host do Metro (debuggerHost) na porta 5000.
  * @returns {string} The API base URL
  */
 export function getApiUrl(): string {
-  let host = process.env.EXPO_PUBLIC_DOMAIN;
+  const envHost = process.env.EXPO_PUBLIC_DOMAIN;
 
-  if (!host) {
-    throw new Error("EXPO_PUBLIC_DOMAIN is not set");
+  if (envHost) {
+    const hostname = envHost.split(":")[0];
+    const isNgrok = /ngrok|\.ngrok\./.test(hostname);
+    const host = envHost.includes(":") ? envHost : isNgrok ? hostname : `${envHost}:${API_PORT}`;
+    const protocol =
+      hostname === "localhost" || /^\d+\.\d+\.\d+\.\d+$/.test(hostname) ? "http" : "https";
+    return `${protocol}://${host}`;
   }
 
-  let url = new URL(`https://${host}`);
+  // Expo Go / desenvolvimento: mesmo host do Metro (hostUri no Expo 50+), porta do API server
+  const hostUri =
+    Constants.expoConfig?.hostUri ??
+    (Constants as { manifest?: { hostUri?: string; debuggerHost?: string } }).manifest?.hostUri ??
+    (Constants as { manifest?: { debuggerHost?: string } }).manifest?.debuggerHost;
 
-  return url.href;
+  if (hostUri) {
+    const [host] = hostUri.split(":");
+    return `http://${host}:${API_PORT}`;
+  }
+
+  // Fallback: emulador local
+  return `http://localhost:${API_PORT}`;
 }
 
 async function throwIfResNotOk(res: Response) {

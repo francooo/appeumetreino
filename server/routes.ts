@@ -299,6 +299,12 @@ Regras:
 - Se não conseguir identificar um equipamento de exercício, responda com confidence menor que 50
 - Retorne APENAS o JSON, sem markdown ou texto adicional`;
 
+      if (!geminiModel) {
+        return res.status(503).json({
+          message: "GEMINI_API_KEY nao configurada. Adicione no .env para usar identificacao por IA.",
+        });
+      }
+
       const result = await geminiModel.generateContent([
         {
           inlineData: {

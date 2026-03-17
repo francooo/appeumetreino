@@ -1,3 +1,4 @@
+import "./load-env";
 import express from "express";
 import type { Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
@@ -6,6 +7,14 @@ import * as path from "path";
 
 const app = express();
 const log = console.log;
+
+if (!process.env.GEMINI_API_KEY) {
+  console.warn(
+    "AVISO: GEMINI_API_KEY nao encontrada no .env. Identificacao de equipamentos por IA nao funcionara.",
+  );
+} else {
+  console.log("GEMINI_API_KEY carregada. Identificacao por IA ativa.");
+}
 
 declare module "http" {
   interface IncomingMessage {
@@ -34,8 +43,24 @@ function setupCors(app: express.Application) {
       origin?.startsWith("http://localhost:") ||
       origin?.startsWith("http://127.0.0.1:");
 
-    if (origin && (origins.has(origin) || isLocalhost)) {
+    // Expo Go / React Native: requests from device may have no Origin or use LAN IP
+    const isLanOrigin =
+      origin?.match(/^https?:\/\/192\.168\.\d{1,3}\.\d{1,3}(:\d+)?$/) ||
+      origin?.match(/^https?:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?$/);
+
+    const allowed =
+      origins.has(origin!) ||
+      isLocalhost ||
+      isLanOrigin ||
+      (process.env.NODE_ENV === "development" && !origin); // mobile apps often send no Origin
+
+    if (origin && allowed) {
       res.header("Access-Control-Allow-Origin", origin);
+    } else if (!origin && process.env.NODE_ENV === "development") {
+      res.header("Access-Control-Allow-Origin", "*");
+    }
+
+    if (allowed || !origin) {
       res.header(
         "Access-Control-Allow-Methods",
         "GET, POST, PUT, DELETE, OPTIONS",
@@ -242,7 +267,6 @@ function setupErrorHandler(app: express.Application) {
     {
       port,
       host: "0.0.0.0",
-      reusePort: true,
     },
     () => {
       log(`express server serving on port ${port}`);
