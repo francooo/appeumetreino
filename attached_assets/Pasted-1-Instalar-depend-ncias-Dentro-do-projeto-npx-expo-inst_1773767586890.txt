@@ -1,0 +1,121 @@
+1. Instalar dependências
+
+Dentro do projeto:
+
+npx expo install expo-auth-session expo-web-browser
+⚙️ 2. Criar credenciais no Google
+
+Vá em:
+👉 Google Cloud Console
+
+Passos:
+
+Criar projeto
+
+Ir em APIs & Services > Credentials
+
+Criar OAuth Client ID
+
+Escolha:
+
+Tipo: Web application (para Expo funciona melhor)
+
+Adicione:
+
+https://auth.expo.io/@seu-usuario/seu-app
+🧠 3. Código básico (Expo)
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
+import { useEffect } from 'react';
+import { Button } from 'react-native';
+
+WebBrowser.maybeCompleteAuthSession();
+
+export default function Login() {
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    expoClientId: 'SEU_EXPO_CLIENT_ID',
+  });
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const { authentication } = response;
+      console.log(authentication.accessToken);
+    }
+  }, [response]);
+
+  return (
+    <Button
+      title="Entrar com Google"
+      disabled={!request}
+      onPress={() => promptAsync()}
+    />
+  );
+}
+🔗 4. O que fazer com o token?
+
+Depois que receber o accessToken, você tem 2 caminhos:
+
+✔️ Simples (local)
+
+Salva no app (AsyncStorage)
+
+Usa como sessão
+
+✔️ Profissional (recomendado)
+
+Envia pro seu backend
+
+Backend valida com Google
+
+Cria sessão própria (JWT)
+
+⚠️ Problemas comuns (especialmente no Replit + Expo Go)
+
+Você comentou que usa o Expo Go, então atenção:
+
+❗ 1. Redirect URI
+
+Tem que bater exatamente com:
+
+https://auth.expo.io/@seu-usuario/seu-app
+❗ 2. Expo Go limitações
+
+O Google pode bloquear se não estiver bem configurado.
+
+👉 Em produção, você vai precisar:
+
+gerar build (apk ou ipa)
+
+usar client ID específico (Android/iOS)
+
+🔒 Alternativa mais robusta (produção)
+
+Se quiser algo mais profissional e escalável:
+
+Use:
+
+Firebase Authentication
+
+Ele já resolve:
+
+login com Google
+
+sessão
+
+segurança
+
+backend pronto
+
+🧩 Resumo estratégico
+
+✔️ Quer algo rápido → expo-auth-session
+
+✔️ Quer escalar → Firebase Auth
+
+✔️ Quer controle total → OAuth + backend próprio
+
+💡 Dica importante (experiência real)
+
+No seu cenário (Replit + Expo):
+
+👉 Comece com expo-auth-session
