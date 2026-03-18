@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -14,16 +14,85 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
+import * as Google from "expo-auth-session/providers/google";
+import * as WebBrowser from "expo-web-browser";
 import Colors from "@/constants/colors";
 import { useApp } from "@/contexts/AppContext";
+
+WebBrowser.maybeCompleteAuthSession();
+
+const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const insets = useSafeAreaInsets();
-  const { loginWithCredentials } = useApp();
+  const { loginWithCredentials, loginWithGoogle } = useApp();
+
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    androidClientId: GOOGLE_CLIENT_ID,
+    webClientId: GOOGLE_CLIENT_ID,
+  });
+
+  useEffect(() => {
+    if (response?.type === "success") {
+      handleGoogleResponse(response.authentication?.accessToken);
+    }
+  }, [response]);
+
+  const handleGoogleResponse = async (accessToken: string | undefined) => {
+    if (!accessToken) {
+      Alert.alert("Erro", "Falha ao obter token do Google");
+      return;
+    }
+
+    setIsGoogleLoading(true);
+    try {
+      // Fetch user info from Google
+      const userInfoResponse = await fetch(
+        "https://www.googleapis.com/userinfo/v2/me",
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+      const userInfo = await userInfoResponse.json();
+
+      if (!userInfo.email || !userInfo.id) {
+        throw new Error("Dados do usuario invalidos");
+      }
+
+      const userData = await loginWithGoogle(
+        userInfo.name || userInfo.email.split("@")[0],
+        userInfo.email,
+        userInfo.id
+      );
+
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+
+      if (!userData.level) {
+        router.replace("/level-select");
+      } else {
+        router.replace("/(tabs)");
+      }
+    } catch (e: any) {
+      console.error("Google auth error:", e);
+      Alert.alert("Erro", "Falha ao entrar com Google. Tente novamente.");
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    await promptAsync();
+  };
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -168,13 +237,18 @@ export default function LoginScreen() {
         </View>
 
         <Pressable
+          onPress={handleGoogleLogin}
+          disabled={!request || isGoogleLoading}
           style={({ pressed }) => [
             styles.googleButton,
             pressed && styles.buttonPressed,
+            (!request || isGoogleLoading) && styles.buttonDisabled,
           ]}
         >
           <Ionicons name="logo-google" size={20} color={Colors.text} />
-          <Text style={styles.googleText}>Entrar com Google</Text>
+          <Text style={styles.googleText}>
+            {isGoogleLoading ? "Entrando..." : "Entrar com Google"}
+          </Text>
         </Pressable>
       </View>
 

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Eu me treino",
     "slug": "eu-me-treino",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "eume-treino",
@@ -24,7 +24,11 @@
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
@@ -51,6 +55,14 @@
     },
     "packagerOpts": {
       "hostType": "lan"
+    },
+    "extra": {
+      "router": {
+        "origin": "http://localhost:8081"
+      },
+      "eas": {
+        "projectId": "450f08bd-1b9c-435e-a6d2-821dacfcc229"
+      }
     }
   }
 }
