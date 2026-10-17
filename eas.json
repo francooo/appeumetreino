@@ -15,11 +15,19 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_DOMAIN": "appeumetreino.vercel.app:443",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "464677533457-ssi1l7f656rp8efgsakq62roag5tns13.apps.googleusercontent.com"
       }
     },
     "production": {
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_DOMAIN": "appeumetreino.vercel.app:443",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "464677533457-ssi1l7f656rp8efgsakq62roag5tns13.apps.googleusercontent.com"
       }
     }
   },
