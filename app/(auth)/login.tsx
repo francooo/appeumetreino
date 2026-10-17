@@ -123,7 +123,7 @@ export default function LoginScreen() {
       <View style={styles.header}>
         <View style={styles.logoRow}>
           <LinearGradient
-            colors={[Colors.primary, Colors.secondary]}
+            colors={[Colors.primary, Colors.primary]}
             style={styles.miniLogo}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -203,7 +203,7 @@ export default function LoginScreen() {
           ]}
         >
           <LinearGradient
-            colors={[Colors.primary, Colors.secondary]}
+            colors={[Colors.primary, Colors.primary]}
             style={styles.loginGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
@@ -280,13 +280,13 @@ const styles = StyleSheet.create({
   miniWeight: {
     width: 6,
     height: 16,
-    backgroundColor: "#fff",
+    backgroundColor: Colors.onPrimary,
     borderRadius: 2,
   },
   miniBar: {
     width: 12,
     height: 4,
-    backgroundColor: "#fff",
+    backgroundColor: Colors.onPrimary,
     borderRadius: 2,
   },
   logoText: {
@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
   loginText: {
     fontFamily: "Rubik_600SemiBold",
     fontSize: 17,
-    color: "#fff",
+    color: Colors.onPrimary,
   },
   buttonPressed: {
     opacity: 0.9,

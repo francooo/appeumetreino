@@ -172,7 +172,7 @@ export default function RegisterScreen() {
           ]}
         >
           <LinearGradient
-            colors={[Colors.primary, Colors.secondary]}
+            colors={[Colors.primary, Colors.primary]}
             style={styles.registerGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   registerText: {
     fontFamily: "Rubik_600SemiBold",
     fontSize: 17,
-    color: "#fff",
+    color: Colors.onPrimary,
   },
   buttonPressed: {
     opacity: 0.9,

@@ -249,13 +249,13 @@ export default function IdentifyEquipmentScreen() {
             style={[styles.analyzingCircle, { transform: [{ scale: pulseAnim }] }]}
           >
             <LinearGradient
-              colors={[Colors.primary, Colors.secondary]}
+              colors={[Colors.primary, Colors.primary]}
               style={styles.analyzingGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
               <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                <Ionicons name="scan" size={48} color="#fff" />
+                <Ionicons name="scan" size={48} color={Colors.onPrimary} />
               </Animated.View>
             </LinearGradient>
           </Animated.View>
@@ -280,7 +280,7 @@ export default function IdentifyEquipmentScreen() {
         <View style={styles.captureContainer}>
           <View style={styles.iconContainer}>
             <LinearGradient
-              colors={["rgba(0, 200, 83, 0.2)", "rgba(0, 188, 212, 0.2)"]}
+              colors={[Colors.limeSoft, Colors.cobaltSoft]}
               style={styles.iconGradient}
             >
               <Ionicons name="scan-outline" size={64} color={Colors.primary} />
@@ -310,12 +310,12 @@ export default function IdentifyEquipmentScreen() {
               testID="take-photo-button"
             >
               <LinearGradient
-                colors={[Colors.primary, Colors.secondary]}
+                colors={[Colors.primary, Colors.primary]}
                 style={styles.actionBtnGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Ionicons name="camera" size={28} color="#fff" />
+                <Ionicons name="camera" size={28} color={Colors.onPrimary} />
                 <Text style={styles.actionBtnText}>Tirar foto</Text>
               </LinearGradient>
             </Pressable>
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   actionBtnText: {
     fontFamily: "Rubik_600SemiBold",
     fontSize: 16,
-    color: "#fff",
+    color: Colors.onPrimary,
   },
   outlineBtnInner: {
     flexDirection: "row",

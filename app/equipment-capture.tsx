@@ -175,10 +175,10 @@ export default function EquipmentCaptureScreen() {
             ]}
           >
             <LinearGradient
-              colors={[Colors.primary, Colors.primaryDark]}
+              colors={[Colors.primary, Colors.primary]}
               style={styles.cameraBtnGradient}
             >
-              <Ionicons name="camera" size={24} color="#fff" />
+              <Ionicons name="camera" size={24} color={Colors.onPrimary} />
               <Text style={styles.cameraBtnText}>Tirar foto</Text>
             </LinearGradient>
           </Pressable>
@@ -245,7 +245,7 @@ export default function EquipmentCaptureScreen() {
                     <Ionicons
                       name={opt.icon as keyof typeof Ionicons.glyphMap}
                       size={28}
-                      color={isSelected ? "#fff" : Colors.textMuted}
+                      color={isSelected ? Colors.onPrimary : Colors.textMuted}
                     />
                   </View>
                   <Text
@@ -258,7 +258,7 @@ export default function EquipmentCaptureScreen() {
                   </Text>
                   {isSelected && (
                     <View style={styles.checkBadge}>
-                      <Ionicons name="checkmark" size={14} color="#fff" />
+                      <Ionicons name="checkmark" size={14} color={Colors.onPrimary} />
                     </View>
                   )}
                 </Pressable>
@@ -286,13 +286,13 @@ export default function EquipmentCaptureScreen() {
           ]}
         >
           <LinearGradient
-            colors={[Colors.primary, Colors.secondary]}
+            colors={[Colors.primary, Colors.primary]}
             style={styles.continueGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           >
             <Text style={styles.continueText}>Continuar</Text>
-            <Ionicons name="arrow-forward" size={20} color="#fff" />
+            <Ionicons name="arrow-forward" size={20} color={Colors.onPrimary} />
           </LinearGradient>
         </Pressable>
       </View>
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   cameraBtnText: {
     fontFamily: "Rubik_600SemiBold",
     fontSize: 15,
-    color: "#fff",
+    color: Colors.onPrimary,
   },
   galleryBtnInner: {
     flexDirection: "row",
@@ -474,6 +474,6 @@ const styles = StyleSheet.create({
   continueText: {
     fontFamily: "Rubik_600SemiBold",
     fontSize: 17,
-    color: "#fff",
+    color: Colors.onPrimary,
   },
 });

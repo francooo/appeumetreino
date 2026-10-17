@@ -237,7 +237,7 @@ export default function ActiveWorkoutScreen() {
                     style={({ pressed }) => [styles.timerBtn, styles.startBtn, pressed && { opacity: 0.8 }]}
                     testID="start-timer-button"
                   >
-                    <Ionicons name="play" size={24} color="#fff" />
+                    <Ionicons name="play" size={24} color={Colors.onPrimary} />
                     <Text style={styles.timerBtnText}>Iniciar</Text>
                   </Pressable>
                 ) : isPaused ? (
@@ -245,7 +245,7 @@ export default function ActiveWorkoutScreen() {
                     onPress={resumeTimer}
                     style={({ pressed }) => [styles.timerBtn, styles.startBtn, pressed && { opacity: 0.8 }]}
                   >
-                    <Ionicons name="play" size={24} color="#fff" />
+                    <Ionicons name="play" size={24} color={Colors.onPrimary} />
                     <Text style={styles.timerBtnText}>Retomar</Text>
                   </Pressable>
                 ) : isRunning ? (
@@ -253,7 +253,7 @@ export default function ActiveWorkoutScreen() {
                     onPress={pauseTimer}
                     style={({ pressed }) => [styles.timerBtn, styles.pauseBtn, pressed && { opacity: 0.8 }]}
                   >
-                    <Ionicons name="pause" size={24} color="#fff" />
+                    <Ionicons name="pause" size={24} color={Colors.onPrimary} />
                     <Text style={styles.timerBtnText}>Pausar</Text>
                   </Pressable>
                 ) : null}
@@ -268,7 +268,7 @@ export default function ActiveWorkoutScreen() {
                   ]}
                   testID="complete-exercise-button"
                 >
-                  <Ionicons name="checkmark" size={24} color="#fff" />
+                  <Ionicons name="checkmark" size={24} color={Colors.onPrimary} />
                   <Text style={styles.timerBtnText}>Concluir</Text>
                 </Pressable>
               </View>
@@ -303,7 +303,7 @@ export default function ActiveWorkoutScreen() {
                       isCompleted && styles.trailDotCompleted,
                     ]}>
                       {isCompleted ? (
-                        <Ionicons name="checkmark" size={14} color="#fff" />
+                        <Ionicons name="checkmark" size={14} color={Colors.onPrimary} />
                       ) : (
                         <Text style={[styles.trailDotText, isCurrent && styles.trailDotTextActive]}>
                           {idx + 1}
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
   timerBtnText: {
     fontFamily: "Rubik_600SemiBold",
     fontSize: 16,
-    color: "#fff",
+    color: Colors.onPrimary,
   },
   exerciseList: {
     flex: 1,
@@ -452,7 +452,7 @@ const styles = StyleSheet.create({
     minHeight: 60,
   },
   trailItemActive: {
-    backgroundColor: "rgba(0, 200, 83, 0.06)",
+    backgroundColor: Colors.limeSoft,
     borderRadius: 14,
     marginHorizontal: -12,
     paddingHorizontal: 12,
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
   },
   trailDotTextActive: {
-    color: "#fff",
+    color: Colors.onPrimary,
   },
   trailLine: {
     width: 2,
@@ -521,7 +521,7 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   currentBadge: {
-    backgroundColor: "rgba(0, 200, 83, 0.15)",
+    backgroundColor: Colors.limeSoft,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: "rgba(0, 200, 83, 0.12)",
+    backgroundColor: Colors.limeSoft,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
@@ -569,6 +569,6 @@ const styles = StyleSheet.create({
   finishBtnText: {
     fontFamily: "Rubik_700Bold",
     fontSize: 18,
-    color: "#fff",
+    color: Colors.onPrimary,
   },
 });

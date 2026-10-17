@@ -70,7 +70,7 @@ export default function ProcessingScreen() {
 
   return (
     <LinearGradient
-      colors={[Colors.background, "#0D1526", Colors.backgroundLight]}
+      colors={[Colors.background, Colors.backgroundLight, Colors.backgroundLight]}
       style={styles.container}
     >
       <View style={[styles.content, { paddingTop: Platform.OS === "web" ? 67 : insets.top }]}>
@@ -89,7 +89,7 @@ export default function ProcessingScreen() {
 
         <Animated.View style={[styles.pulseIcon, { transform: [{ scale: pulseAnim }] }]}>
           <LinearGradient
-            colors={[Colors.primary, Colors.secondary]}
+            colors={[Colors.primary, Colors.primary]}
             style={styles.pulseGradient}
           >
             <View style={styles.processingDumbbell}>
@@ -111,7 +111,7 @@ export default function ProcessingScreen() {
           <View style={styles.progressBar}>
             <Animated.View style={[styles.progressFill, { width: progressWidth as any }]}>
               <LinearGradient
-                colors={[Colors.primary, Colors.secondary]}
+                colors={[Colors.primary, Colors.primary]}
                 style={styles.progressGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
@@ -199,13 +199,13 @@ const styles = StyleSheet.create({
   pWeight: {
     width: 10,
     height: 28,
-    backgroundColor: "#fff",
+    backgroundColor: Colors.onPrimary,
     borderRadius: 3,
   },
   pBar: {
     width: 20,
     height: 6,
-    backgroundColor: "#fff",
+    backgroundColor: Colors.onPrimary,
     borderRadius: 3,
   },
   textContainer: {

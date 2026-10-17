@@ -54,10 +54,10 @@ export default function WorkoutResultScreen() {
       >
         <View style={styles.successBadge}>
           <LinearGradient
-            colors={[Colors.primary, Colors.secondary]}
+            colors={[Colors.primary, Colors.primary]}
             style={styles.successGradient}
           >
-            <Ionicons name="checkmark" size={32} color="#fff" />
+            <Ionicons name="checkmark" size={32} color={Colors.onPrimary} />
           </LinearGradient>
         </View>
 
@@ -157,12 +157,12 @@ export default function WorkoutResultScreen() {
           ]}
         >
           <LinearGradient
-            colors={[Colors.primary, Colors.secondary]}
+            colors={[Colors.primary, Colors.primary]}
             style={styles.startGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           >
-            <Ionicons name="play" size={22} color="#fff" />
+            <Ionicons name="play" size={22} color={Colors.onPrimary} />
             <Text style={styles.startText}>Iniciar treino</Text>
           </LinearGradient>
         </Pressable>
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: "rgba(0, 200, 83, 0.15)",
+    backgroundColor: Colors.limeSoft,
   },
   levelText: {
     fontFamily: "Rubik_500Medium",
@@ -377,6 +377,6 @@ const styles = StyleSheet.create({
   startText: {
     fontFamily: "Rubik_600SemiBold",
     fontSize: 17,
-    color: "#fff",
+    color: Colors.onPrimary,
   },
 });

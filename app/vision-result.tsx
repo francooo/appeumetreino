@@ -156,13 +156,13 @@ export default function VisionResultScreen() {
 
       <View style={styles.equipmentCard}>
         <LinearGradient
-          colors={[Colors.primary, Colors.secondary]}
+          colors={[Colors.primary, Colors.primary]}
           style={styles.equipmentGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
           <View style={styles.equipmentIcon}>
-            <Ionicons name="fitness" size={28} color="#fff" />
+            <Ionicons name="fitness" size={28} color={Colors.onPrimary} />
           </View>
           <View style={styles.equipmentInfo}>
             <Text style={styles.equipmentName}>{data.equipment_name}</Text>
@@ -309,12 +309,12 @@ export default function VisionResultScreen() {
           testID="start-workout-button"
         >
           <LinearGradient
-            colors={[Colors.primary, Colors.secondary]}
+            colors={[Colors.primary, Colors.primary]}
             style={styles.startWorkoutGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            <Ionicons name="play" size={22} color="#fff" />
+            <Ionicons name="play" size={22} color={Colors.onPrimary} />
             <Text style={styles.startWorkoutText}>Iniciar treino</Text>
           </LinearGradient>
         </Pressable>
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    backgroundColor: "rgba(17,19,24,0.08)",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
   equipmentName: {
     fontFamily: "Rubik_700Bold",
     fontSize: 22,
-    color: "#fff",
+    color: Colors.onPrimary,
   },
   confidenceRow: {
     flexDirection: "row",
@@ -392,12 +392,12 @@ const styles = StyleSheet.create({
   confidenceText: {
     fontFamily: "Rubik_700Bold",
     fontSize: 13,
-    color: "#fff",
+    color: Colors.onPrimary,
   },
   confidenceLabel: {
     fontFamily: "Rubik_400Regular",
     fontSize: 13,
-    color: "rgba(255,255,255,0.8)",
+    color: "rgba(17,19,24,0.7)",
   },
   sectionTitle: {
     fontFamily: "Rubik_700Bold",
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
   },
   exerciseCardActive: {
     borderColor: Colors.primary,
-    backgroundColor: "rgba(0, 200, 83, 0.08)",
+    backgroundColor: Colors.limeSoft,
   },
   exerciseCardName: {
     fontFamily: "Rubik_600SemiBold",
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   muscleTag: {
-    backgroundColor: "rgba(0, 188, 212, 0.15)",
+    backgroundColor: Colors.cobaltSoft,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
@@ -554,7 +554,7 @@ const styles = StyleSheet.create({
   startWorkoutText: {
     fontFamily: "Rubik_700Bold",
     fontSize: 16,
-    color: "#fff",
+    color: Colors.onPrimary,
   },
   errorText: {
     fontFamily: "Rubik_600SemiBold",

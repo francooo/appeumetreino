@@ -71,7 +71,7 @@ export default function SplashScreen() {
 
   return (
     <LinearGradient
-      colors={[Colors.background, "#0D1526", Colors.backgroundLight]}
+      colors={[Colors.background, Colors.backgroundLight, Colors.backgroundLight]}
       style={styles.container}
     >
       <View style={[styles.content, { paddingTop: Platform.OS === "web" ? 67 : insets.top }]}>
@@ -83,7 +83,7 @@ export default function SplashScreen() {
         >
           <View style={styles.iconCircle}>
             <LinearGradient
-              colors={[Colors.primary, Colors.secondary]}
+              colors={[Colors.primary, Colors.primary]}
               style={styles.iconGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -147,13 +147,13 @@ const styles = StyleSheet.create({
   dumbbellWeight: {
     width: 14,
     height: 36,
-    backgroundColor: "#fff",
+    backgroundColor: Colors.onPrimary,
     borderRadius: 4,
   },
   dumbbellBar: {
     width: 28,
     height: 8,
-    backgroundColor: "#fff",
+    backgroundColor: Colors.onPrimary,
     borderRadius: 4,
   },
   title: {

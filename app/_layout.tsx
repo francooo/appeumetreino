@@ -13,6 +13,7 @@ import {
   Rubik_500Medium,
   Rubik_600SemiBold,
   Rubik_700Bold,
+  Rubik_800ExtraBold,
 } from "@expo-google-fonts/rubik";
 import { StatusBar } from "expo-status-bar";
 import { View } from "react-native";
@@ -33,6 +34,7 @@ function RootLayoutNav() {
       <Stack.Screen name="exercise-detail" />
       <Stack.Screen name="identify-equipment" />
       <Stack.Screen name="vision-result" />
+      <Stack.Screen name="add-equipment" />
       <Stack.Screen name="(tabs)" />
     </Stack>
   );
@@ -44,6 +46,7 @@ export default function RootLayout() {
     Rubik_500Medium,
     Rubik_600SemiBold,
     Rubik_700Bold,
+    Rubik_800ExtraBold,
   });
 
   useEffect(() => {
@@ -53,7 +56,7 @@ export default function RootLayout() {
   }, [fontsLoaded]);
 
   if (!fontsLoaded) {
-    return <View style={{ flex: 1, backgroundColor: "#0A0F1C" }} />;
+    return <View style={{ flex: 1, backgroundColor: "#F7F5EF" }} />;
   }
 
   return (
@@ -62,7 +65,7 @@ export default function RootLayout() {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <KeyboardProvider>
             <AppProvider>
-              <StatusBar style="light" />
+              <StatusBar style="dark" />
               <RootLayoutNav />
             </AppProvider>
           </KeyboardProvider>

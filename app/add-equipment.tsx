@@ -149,11 +149,20 @@ export default function AddEquipmentScreen() {
         styles.scrollContent,
         {
           paddingTop: Platform.OS === "web" ? 67 : insets.top + 16,
-          paddingBottom: Platform.OS === "web" ? 34 + 80 : insets.bottom + 100,
+          paddingBottom: Platform.OS === "web" ? 34 : insets.bottom + 24,
         },
       ]}
       showsVerticalScrollIndicator={false}
     >
+      <Pressable
+        onPress={() => router.back()}
+        style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}
+        accessibilityRole="button"
+        accessibilityLabel="Voltar"
+        hitSlop={8}
+      >
+        <Ionicons name="arrow-back" size={22} color={Colors.text} />
+      </Pressable>
       <Text style={styles.title}>
         {showFiltered ? "Equipamentos do treino" : "Equipamentos"}
       </Text>
@@ -182,10 +191,10 @@ export default function AddEquipmentScreen() {
           ]}
         >
           <LinearGradient
-            colors={[Colors.primary, Colors.primaryDark]}
+            colors={[Colors.primary, Colors.primary]}
             style={styles.cameraBtnGradient}
           >
-            <Ionicons name="camera" size={22} color="#fff" />
+            <Ionicons name="camera" size={22} color={Colors.onPrimary} />
             <Text style={styles.cameraBtnText}>Tirar foto</Text>
           </LinearGradient>
         </Pressable>
@@ -314,6 +323,17 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
   },
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
   title: {
     fontFamily: "Rubik_700Bold",
     fontSize: 28,
@@ -331,7 +351,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     alignSelf: "flex-start",
-    backgroundColor: "rgba(0, 200, 83, 0.1)",
+    backgroundColor: Colors.limeSoft,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 10,
@@ -366,7 +386,7 @@ const styles = StyleSheet.create({
   cameraBtnText: {
     fontFamily: "Rubik_600SemiBold",
     fontSize: 15,
-    color: "#fff",
+    color: Colors.onPrimary,
   },
   galleryBtnInner: {
     flexDirection: "row",
@@ -479,7 +499,7 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
-    backgroundColor: "rgba(0, 188, 212, 0.08)",
+    backgroundColor: Colors.cobaltSoft,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: Colors.secondary,

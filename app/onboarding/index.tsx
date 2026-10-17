@@ -33,7 +33,7 @@ const slides: Slide[] = [
     title: "Tire fotos dos seus\nequipamentos",
     description:
       "Fotografe os aparelhos de exercicio que voce tem em casa. Nos identificamos e criamos treinos sob medida.",
-    gradient: [Colors.primary, "#00A843"],
+    gradient: ["#557000", "#7A9A00"],
   },
   {
     id: "2",
@@ -87,7 +87,7 @@ export default function OnboardingScreen() {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            <Ionicons name={item.icon} size={48} color="#fff" />
+            <Ionicons name={item.icon} size={48} color="#FFFFFF" />
           </LinearGradient>
         </View>
         <Text style={styles.slideTitle}>{item.title}</Text>
@@ -150,7 +150,7 @@ export default function OnboardingScreen() {
           ]}
         >
           <LinearGradient
-            colors={[Colors.primary, Colors.secondary]}
+            colors={[Colors.primary, Colors.primary]}
             style={styles.nextButtonGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
@@ -165,7 +165,7 @@ export default function OnboardingScreen() {
                   : "arrow-forward"
               }
               size={20}
-              color="#fff"
+              color={Colors.onPrimary}
             />
           </LinearGradient>
         </Pressable>
@@ -267,6 +267,6 @@ const styles = StyleSheet.create({
   nextButtonText: {
     fontFamily: "Rubik_600SemiBold",
     fontSize: 17,
-    color: "#fff",
+    color: Colors.onPrimary,
   },
 });

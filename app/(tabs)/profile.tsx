@@ -66,7 +66,7 @@ export default function ProfileScreen() {
 
       <View style={styles.profileCard}>
         <LinearGradient
-          colors={[Colors.primary, Colors.secondary]}
+          colors={[Colors.primary, Colors.primary]}
           style={styles.profileAvatar}
         >
           <Text style={styles.profileAvatarText}>
@@ -127,7 +127,7 @@ export default function ProfileScreen() {
         <MenuItem
           icon="barbell-outline"
           label="Gerenciar equipamentos"
-          onPress={() => router.push("/(tabs)/add-equipment")}
+          onPress={() => router.push("/add-equipment")}
         />
         <MenuItem
           icon="information-circle-outline"
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   profileAvatarText: {
     fontFamily: "Rubik_700Bold",
     fontSize: 32,
-    color: "#fff",
+    color: Colors.onPrimary,
   },
   profileName: {
     fontFamily: "Rubik_700Bold",
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: "rgba(0, 200, 83, 0.15)",
+    backgroundColor: Colors.limeSoft,
     marginTop: 4,
   },
   levelChipText: {
