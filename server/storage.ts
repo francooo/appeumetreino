@@ -10,7 +10,7 @@ import {
   type Equipment,
   type Workout,
   type WorkoutHistory,
-} from "@shared/schema";
+} from "../shared/schema";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;

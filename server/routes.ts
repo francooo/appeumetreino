@@ -7,7 +7,7 @@ import {
   registerSchema,
   loginSchema,
   googleAuthSchema,
-} from "@shared/schema";
+} from "../shared/schema";
 import { identifyImage, isGroqConfigured } from "./groq";
 
 export async function registerRoutes(app: Express): Promise<Server> {
