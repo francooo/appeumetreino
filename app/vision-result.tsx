@@ -26,6 +26,7 @@ interface SuggestedExercise {
   sets: number;
   reps: string;
   rest_seconds: number;
+  suggested_weight?: string | null;
 }
 
 interface VisionResult {
@@ -91,6 +92,7 @@ export default function VisionResultScreen() {
         reps: repsStr,
         rest: `${ex.rest_seconds}s`,
         restSeconds: ex.rest_seconds,
+        weight: ex.suggested_weight || undefined,
         equipment: data.equipment_name,
         instructions: ex.description,
         mediaUrl: "",
@@ -251,6 +253,15 @@ export default function VisionResultScreen() {
                 <Text style={styles.detailStatLabel}>descanso</Text>
               </View>
             </View>
+
+            {selectedExercise.suggested_weight ? (
+              <View style={styles.weightRow}>
+                <Ionicons name="barbell" size={16} color={Colors.primary} />
+                <Text style={styles.weightText}>
+                  Peso sugerido: {selectedExercise.suggested_weight}
+                </Text>
+              </View>
+            ) : null}
 
             <Text style={styles.detailDescTitle}>Instrucoes</Text>
             <Text style={styles.detailDesc}>{selectedExercise.description}</Text>
@@ -479,6 +490,16 @@ const styles = StyleSheet.create({
     fontFamily: "Rubik_400Regular",
     fontSize: 12,
     color: Colors.textSecondary,
+  },
+  weightRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  weightText: {
+    fontFamily: "Rubik_500Medium",
+    fontSize: 14,
+    color: Colors.text,
   },
   detailDescTitle: {
     fontFamily: "Rubik_600SemiBold",

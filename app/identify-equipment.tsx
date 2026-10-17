@@ -22,7 +22,7 @@ import { useApp } from "@/contexts/AppContext";
 
 export default function IdentifyEquipmentScreen() {
   const insets = useSafeAreaInsets();
-  const { setVisionResult } = useApp();
+  const { setVisionResult, level } = useApp();
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -95,6 +95,7 @@ export default function IdentifyEquipmentScreen() {
       }
       const response = await apiRequest("POST", "/api/vision/identify", {
         image: base64Image,
+        level,
       });
       const data = await response.json();
 

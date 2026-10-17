@@ -98,6 +98,19 @@ export default function ExerciseDetailScreen() {
           </View>
         </View>
 
+        {exercise.weight ? (
+          <View style={styles.weightCard}>
+            <Ionicons name="barbell" size={20} color={Colors.primary} />
+            <View style={styles.weightContent}>
+              <Text style={styles.statLabel}>Peso sugerido</Text>
+              <Text style={styles.weightValue}>{exercise.weight}</Text>
+              <Text style={styles.weightHint}>
+                Ajuste para que as ultimas repeticoes sejam desafiadoras, sem perder a postura.
+              </Text>
+            </View>
+          </View>
+        ) : null}
+
         <View style={styles.equipmentTag}>
           <Ionicons name="fitness" size={16} color={Colors.primary} />
           <Text style={styles.equipmentTagText}>{exercise.equipment}</Text>
@@ -210,6 +223,31 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     alignItems: "center",
+  },
+  weightCard: {
+    flexDirection: "row",
+    gap: 12,
+    backgroundColor: Colors.card,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  weightContent: {
+    flex: 1,
+    gap: 2,
+  },
+  weightValue: {
+    fontFamily: "Rubik_700Bold",
+    fontSize: 16,
+    color: Colors.text,
+  },
+  weightHint: {
+    fontFamily: "Rubik_400Regular",
+    fontSize: 12,
+    color: Colors.textMuted,
+    marginTop: 4,
   },
   statItem: {
     flex: 1,

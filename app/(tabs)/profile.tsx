@@ -31,7 +31,11 @@ export default function ProfileScreen() {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           }
           await logout();
-          router.replace("/");
+          // "/" tambem resolve para a aba Inicio; ir direto para o login e limpar a pilha
+          if (router.canDismiss()) {
+            router.dismissAll();
+          }
+          router.replace("/(auth)/login");
         },
       },
     ]);

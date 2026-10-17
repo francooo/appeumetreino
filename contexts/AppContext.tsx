@@ -31,7 +31,7 @@ interface AppContextValue {
   login: (user: UserData) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<UserData>;
   loginWithCredentials: (email: string, password: string) => Promise<UserData>;
-  loginWithGoogle: (name: string, email: string, googleId: string) => Promise<UserData>;
+  loginWithGoogle: (idToken: string) => Promise<UserData>;
   logout: () => Promise<void>;
   setUserLevel: (level: Level) => Promise<void>;
   addUserEquipment: (item: Equipment) => Promise<void>;
@@ -143,21 +143,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return userData;
   }, [hydrateUserData]);
 
-  const loginWithGoogle = useCallback(async (name: string, email: string, googleId: string): Promise<UserData> => {
-    const res = await apiRequest("POST", "/api/auth/google", { name, email, googleId });
+  const loginWithGoogle = useCallback(async (idToken: string): Promise<UserData> => {
+    const res = await apiRequest("POST", "/api/auth/google", { idToken });
     const userData: UserData = await res.json();
     await hydrateUserData(userData);
     return userData;
   }, [hydrateUserData]);
 
   const logout = useCallback(async () => {
-    await storage.clearAllData();
+    await storage.clearUserData();
     setUser(null);
     setLevel(null);
     setEquipmentState([]);
     setWorkouts([]);
     setHistory([]);
-    setIsOnboardedState(false);
   }, []);
 
   const setUserLevel = useCallback(async (l: Level) => {

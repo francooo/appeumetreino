@@ -80,9 +80,7 @@ export const loginSchema = z.object({
 });
 
 export const googleAuthSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email(),
-  googleId: z.string().min(1),
+  idToken: z.string().min(1),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

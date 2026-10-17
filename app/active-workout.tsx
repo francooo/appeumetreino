@@ -227,6 +227,7 @@ export default function ActiveWorkoutScreen() {
               <Text style={styles.currentExName}>{currentExercise.name}</Text>
               <Text style={styles.currentExMeta}>
                 {currentExercise.sets} series x {currentExercise.reps} reps
+                {currentExercise.weight ? ` · ${currentExercise.weight}` : ""}
               </Text>
               <Text style={styles.timerDisplay}>{formatTime(timeLeft)}</Text>
               <View style={styles.timerControls}>
@@ -322,7 +323,7 @@ export default function ActiveWorkoutScreen() {
                       isCompleted && styles.trailNameCompleted,
                     ]}>{ex.name}</Text>
                     <Text style={styles.trailDetail}>
-                      {ex.sets} series x {ex.reps} reps · {ex.equipment}
+                      {ex.sets} series x {ex.reps} reps · {ex.weight || ex.equipment}
                     </Text>
                   </View>
                   {isCurrent && !isCompleted && (

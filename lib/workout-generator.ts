@@ -6,6 +6,8 @@ interface ExerciseTemplate {
   sets: { beginner: number; intermediate: number; advanced: number };
   reps: { beginner: string; intermediate: string; advanced: string };
   rest: { beginner: number; intermediate: number; advanced: number };
+  // Carga sugerida por nivel; ausente em exercicios com peso corporal
+  weight?: { beginner: string; intermediate: string; advanced: string };
   instructions: string;
 }
 
@@ -17,6 +19,7 @@ const EQUIPMENT_EXERCISES: Record<string, ExerciseTemplate[]> = {
       sets: { beginner: 3, intermediate: 4, advanced: 5 },
       reps: { beginner: "10", intermediate: "12", advanced: "15" },
       rest: { beginner: 90, intermediate: 60, advanced: 45 },
+      weight: { beginner: "4–6 kg por halter", intermediate: "8–10 kg por halter", advanced: "12–16 kg por halter" },
       instructions: "1. Fique em pe com os pes na largura dos ombros, segurando um halter em cada mao com os bracos estendidos.\n2. Mantenha os cotovelos proximos ao corpo e as palmas viradas para frente.\n3. Inspire e, ao expirar, flexione os cotovelos levantando os halteres ate a altura dos ombros.\n4. Segure por 1 segundo no topo, contraindo o biceps.\n5. Desga lentamente ate a posicao inicial, controlando o movimento.\n6. Mantenha a postura ereta durante todo o exercicio, sem balançar o tronco.",
     },
     {
@@ -25,6 +28,7 @@ const EQUIPMENT_EXERCISES: Record<string, ExerciseTemplate[]> = {
       sets: { beginner: 3, intermediate: 4, advanced: 4 },
       reps: { beginner: "8", intermediate: "10", advanced: "12" },
       rest: { beginner: 90, intermediate: 60, advanced: 45 },
+      weight: { beginner: "4–6 kg por halter", intermediate: "8–12 kg por halter", advanced: "14–18 kg por halter" },
       instructions: "1. Sente-se ou fique em pe com a coluna reta, segurando um halter em cada mao na altura dos ombros.\n2. As palmas devem estar viradas para frente, cotovelos a 90 graus.\n3. Inspire e, ao expirar, empurre os halteres para cima ate estender completamente os bracos.\n4. Nao trave os cotovelos no topo do movimento.\n5. Desga lentamente ate a posicao inicial.\n6. Mantenha o core ativado para proteger a coluna lombar.",
     },
     {
@@ -33,6 +37,7 @@ const EQUIPMENT_EXERCISES: Record<string, ExerciseTemplate[]> = {
       sets: { beginner: 3, intermediate: 4, advanced: 4 },
       reps: { beginner: "10", intermediate: "12", advanced: "15" },
       rest: { beginner: 90, intermediate: 60, advanced: 45 },
+      weight: { beginner: "6–10 kg", intermediate: "12–16 kg", advanced: "18–24 kg" },
       instructions: "1. Apoie um joelho e a mao do mesmo lado em um banco, mantendo as costas paralelas ao chao.\n2. Segure o halter com a mao oposta, braco estendido para baixo.\n3. Inspire e, ao expirar, puxe o halter em direcao ao quadril, mantendo o cotovelo proximo ao corpo.\n4. Aperte as costas no topo do movimento por 1 segundo.\n5. Desga de forma controlada ate a posicao inicial.\n6. Complete todas as repeticoes de um lado antes de trocar.",
     },
     {
@@ -41,6 +46,7 @@ const EQUIPMENT_EXERCISES: Record<string, ExerciseTemplate[]> = {
       sets: { beginner: 3, intermediate: 4, advanced: 5 },
       reps: { beginner: "10", intermediate: "12", advanced: "15" },
       rest: { beginner: 90, intermediate: 60, advanced: 45 },
+      weight: { beginner: "6–10 kg por halter", intermediate: "12–16 kg por halter", advanced: "18–24 kg por halter" },
       instructions: "1. Fique em pe com os pes na largura dos ombros, segurando um halter em cada mao ao lado do corpo.\n2. Mantenha o peito erguido e o olhar para frente.\n3. Inspire e agache flexionando os joelhos e o quadril, como se fosse sentar em uma cadeira.\n4. Desga ate as coxas ficarem paralelas ao chao, mantendo os joelhos alinhados com os pes.\n5. Expire e empurre o chao para subir ate a posicao inicial.\n6. Mantenha os calcanhares no chao durante todo o movimento.",
     },
     {
@@ -49,6 +55,7 @@ const EQUIPMENT_EXERCISES: Record<string, ExerciseTemplate[]> = {
       sets: { beginner: 3, intermediate: 4, advanced: 4 },
       reps: { beginner: "8", intermediate: "10", advanced: "12" },
       rest: { beginner: 90, intermediate: 60, advanced: 45 },
+      weight: { beginner: "6–10 kg por halter", intermediate: "12–16 kg por halter", advanced: "18–26 kg por halter" },
       instructions: "1. Deite-se em um banco reto com um halter em cada mao, bracos estendidos acima do peito.\n2. Mantenha os pes firmes no chao e as escapulas retraidas.\n3. Inspire e desga os halteres lentamente ate os cotovelos ficarem a 90 graus.\n4. Expire e empurre os halteres para cima, estendendo os bracos sem travar os cotovelos.\n5. Mantenha o controle durante todo o movimento, sem deixar os halteres quicarem.\n6. Mantenha a curvatura natural da lombar sem arquear excessivamente.",
     },
     {
@@ -57,6 +64,7 @@ const EQUIPMENT_EXERCISES: Record<string, ExerciseTemplate[]> = {
       sets: { beginner: 3, intermediate: 3, advanced: 4 },
       reps: { beginner: "10", intermediate: "12", advanced: "15" },
       rest: { beginner: 60, intermediate: 45, advanced: 30 },
+      weight: { beginner: "2–4 kg por halter", intermediate: "4–6 kg por halter", advanced: "6–10 kg por halter" },
       instructions: "1. Fique em pe com os pes na largura dos ombros, segurando um halter em cada mao ao lado do corpo.\n2. Mantenha uma leve flexao nos cotovelos durante todo o movimento.\n3. Inspire e, ao expirar, levante os bracos lateralmente ate a altura dos ombros.\n4. As palmas devem estar viradas para baixo no topo do movimento.\n5. Segure por 1 segundo e desga lentamente.\n6. Evite usar impulso do corpo; o movimento deve ser controlado e isolado nos ombros.",
     },
   ],
@@ -67,6 +75,7 @@ const EQUIPMENT_EXERCISES: Record<string, ExerciseTemplate[]> = {
       sets: { beginner: 3, intermediate: 4, advanced: 5 },
       reps: { beginner: "8", intermediate: "10", advanced: "12" },
       rest: { beginner: 120, intermediate: 90, advanced: 60 },
+      weight: { beginner: "20–30 kg no total (barra + anilhas)", intermediate: "35–50 kg no total (barra + anilhas)", advanced: "55–80 kg no total (barra + anilhas)" },
       instructions: "1. Deite-se no banco com os olhos alinhados abaixo da barra.\n2. Segure a barra com as maos um pouco mais afastadas que a largura dos ombros.\n3. Retire a barra do suporte e posicione-a acima do peito com os bracos estendidos.\n4. Inspire e desga a barra ate tocar levemente o peito.\n5. Expire e empurre a barra para cima ate estender completamente os bracos.\n6. Mantenha as escapulas retraidas e os pes firmes no chao durante todo o movimento.",
     },
     {
@@ -75,6 +84,7 @@ const EQUIPMENT_EXERCISES: Record<string, ExerciseTemplate[]> = {
       sets: { beginner: 3, intermediate: 4, advanced: 5 },
       reps: { beginner: "8", intermediate: "10", advanced: "12" },
       rest: { beginner: 120, intermediate: 90, advanced: 60 },
+      weight: { beginner: "20–35 kg no total (barra + anilhas)", intermediate: "40–60 kg no total (barra + anilhas)", advanced: "70–100 kg no total (barra + anilhas)" },
       instructions: "1. Posicione a barra sobre os trapezios (parte superior das costas), nao sobre o pescoco.\n2. Pes na largura dos ombros, pontas levemente viradas para fora.\n3. Inspire e agache controladamente, empurrando o quadril para tras.\n4. Desga ate as coxas ficarem paralelas ao chao ou um pouco abaixo.\n5. Mantenha o peito erguido, coluna neutra e joelhos apontando na direcao dos pes.\n6. Expire e suba de forma explosiva, empurrando o chao com os calcanhares.",
     },
     {
@@ -83,6 +93,7 @@ const EQUIPMENT_EXERCISES: Record<string, ExerciseTemplate[]> = {
       sets: { beginner: 3, intermediate: 4, advanced: 4 },
       reps: { beginner: "8", intermediate: "10", advanced: "12" },
       rest: { beginner: 90, intermediate: 60, advanced: 45 },
+      weight: { beginner: "15–25 kg no total (barra + anilhas)", intermediate: "30–45 kg no total (barra + anilhas)", advanced: "50–70 kg no total (barra + anilhas)" },
       instructions: "1. Fique em pe com os pes na largura dos ombros, segurando a barra com pegada pronada.\n2. Incline o tronco para frente ate ficar quase paralelo ao chao, joelhos levemente flexionados.\n3. Deixe a barra pendurada com os bracos estendidos.\n4. Inspire e, ao expirar, puxe a barra em direcao ao abdomen.\n5. Aperte as escapulas no topo do movimento.\n6. Desga de forma controlada e repita. Mantenha a coluna neutra durante todo o exercicio.",
     },
     {
@@ -91,6 +102,7 @@ const EQUIPMENT_EXERCISES: Record<string, ExerciseTemplate[]> = {
       sets: { beginner: 3, intermediate: 4, advanced: 4 },
       reps: { beginner: "8", intermediate: "10", advanced: "12" },
       rest: { beginner: 90, intermediate: 60, advanced: 45 },
+      weight: { beginner: "15–20 kg no total (barra + anilhas)", intermediate: "25–35 kg no total (barra + anilhas)", advanced: "40–55 kg no total (barra + anilhas)" },
       instructions: "1. Fique em pe com os pes na largura dos ombros, segurando a barra na altura dos ombros.\n2. Pegada um pouco mais afastada que a largura dos ombros, palmas para frente.\n3. Inspire e, ao expirar, empurre a barra para cima ate estender os bracos completamente.\n4. Mantenha o core ativado e evite inclinar o tronco para tras.\n5. Desga a barra de forma controlada ate a posicao inicial.\n6. Nao use impulso das pernas; o movimento deve ser isolado nos ombros.",
     },
   ],
@@ -161,6 +173,7 @@ const EQUIPMENT_EXERCISES: Record<string, ExerciseTemplate[]> = {
       sets: { beginner: 3, intermediate: 4, advanced: 5 },
       reps: { beginner: "8", intermediate: "10", advanced: "12" },
       rest: { beginner: 90, intermediate: 60, advanced: 45 },
+      weight: { beginner: "6–10 kg por halter", intermediate: "12–16 kg por halter", advanced: "18–26 kg por halter" },
       instructions: "1. Deite-se no banco com as costas apoiadas e os pes firmes no chao.\n2. Segure os halteres ou barra acima do peito com os bracos estendidos.\n3. Mantenha as escapulas retraidas e o peito expandido.\n4. Inspire e desga o peso ate os cotovelos ficarem a 90 graus.\n5. Expire e empurre o peso para cima de forma controlada.\n6. Nao deixe os cotovelos abrirem demais para proteger os ombros.",
     },
     {
@@ -187,6 +200,7 @@ const EQUIPMENT_EXERCISES: Record<string, ExerciseTemplate[]> = {
       sets: { beginner: 3, intermediate: 4, advanced: 5 },
       reps: { beginner: "10", intermediate: "15", advanced: "20" },
       rest: { beginner: 90, intermediate: 60, advanced: 45 },
+      weight: { beginner: "8–12 kg", intermediate: "12–16 kg", advanced: "16–24 kg" },
       instructions: "1. Fique em pe com os pes um pouco mais afastados que a largura dos ombros.\n2. Segure o kettlebell com ambas as maos, bracos estendidos.\n3. Flexione levemente os joelhos e empurre o quadril para tras, balançando o kettlebell entre as pernas.\n4. Expire e projete o quadril para frente de forma explosiva, balançando o kettlebell ate a altura dos ombros.\n5. Deixe o kettlebell descer naturalmente, absorvendo o peso com o quadril.\n6. O movimento vem do quadril, nao dos bracos. Mantenha o core ativado.",
     },
     {
@@ -195,6 +209,7 @@ const EQUIPMENT_EXERCISES: Record<string, ExerciseTemplate[]> = {
       sets: { beginner: 3, intermediate: 4, advanced: 4 },
       reps: { beginner: "10", intermediate: "12", advanced: "15" },
       rest: { beginner: 90, intermediate: 60, advanced: 45 },
+      weight: { beginner: "8–12 kg", intermediate: "12–16 kg", advanced: "16–24 kg" },
       instructions: "1. Segure o kettlebell pela alça proximo ao peito, cotovelos apontando para baixo.\n2. Pes na largura dos ombros, pontas levemente viradas para fora.\n3. Inspire e agache controladamente, mantendo o peito erguido e o kettlebell proximo ao corpo.\n4. Desga ate as coxas ficarem paralelas ao chao ou mais abaixo.\n5. Use os cotovelos para empurrar os joelhos para fora se necessario.\n6. Expire e suba, empurrando o chao com os calcanhares.",
     },
     {
@@ -203,6 +218,7 @@ const EQUIPMENT_EXERCISES: Record<string, ExerciseTemplate[]> = {
       sets: { beginner: 3, intermediate: 4, advanced: 4 },
       reps: { beginner: "8", intermediate: "10", advanced: "12" },
       rest: { beginner: 90, intermediate: 60, advanced: 45 },
+      weight: { beginner: "6–8 kg", intermediate: "8–12 kg", advanced: "12–16 kg" },
       instructions: "1. Fique em pe com os pes na largura dos ombros, kettlebell no chao entre os pes.\n2. Agache e segure o kettlebell com uma mao.\n3. Puxe o kettlebell para cima em um movimento fluido ate a posicao de rack (na frente do ombro).\n4. Sem pausa, empurre o kettlebell para cima ate estender completamente o braco.\n5. Desga o kettlebell de volta a posicao de rack e depois ao chao.\n6. Mantenha o core ativado durante todo o movimento. Alterne os lados.",
     },
     {
@@ -211,6 +227,7 @@ const EQUIPMENT_EXERCISES: Record<string, ExerciseTemplate[]> = {
       sets: { beginner: 2, intermediate: 3, advanced: 4 },
       reps: { beginner: "3", intermediate: "5", advanced: "5" },
       rest: { beginner: 90, intermediate: 60, advanced: 45 },
+      weight: { beginner: "4–6 kg", intermediate: "8–12 kg", advanced: "12–16 kg" },
       instructions: "1. Deite-se de costas segurando o kettlebell com o braco estendido para cima.\n2. Flexione o joelho do mesmo lado do kettlebell, pe apoiado no chao.\n3. Role para o lado oposto, apoiando-se no antebraço e depois na mao.\n4. Levante o quadril do chao formando uma ponte.\n5. Passe a perna esticada por baixo do corpo ate ficar em posicao de afundo.\n6. Levante-se completamente. Inverta o movimento para descer. Mantenha o olhar no kettlebell.",
     },
   ],
@@ -430,6 +447,7 @@ export function generateWorkout(
       reps: repsStr,
       equipment: t.equipment,
       restSeconds,
+      weight: t.weight?.[level],
       instructions: t.instructions,
       mediaUrl: "",
       duration,

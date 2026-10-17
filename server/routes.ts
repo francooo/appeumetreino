@@ -108,7 +108,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const { name, email, googleId } = parsed.data;
+      const webClientId = process.env.GOOGLE_WEB_CLIENT_ID;
+      if (!webClientId) {
+        return res.status(503).json({ message: "GOOGLE_WEB_CLIENT_ID nao configurada" });
+      }
+
+      // Valida o idToken no Google em vez de confiar nos dados enviados pelo app
+      const tokenRes = await fetch(
+        `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(parsed.data.idToken)}`,
+      );
+      const tokenInfo = (await tokenRes.json()) as {
+        aud?: string;
+        sub?: string;
+        email?: string;
+        email_verified?: string;
+        name?: string;
+      };
+      if (
+        !tokenRes.ok ||
+        tokenInfo.aud !== webClientId ||
+        !tokenInfo.sub ||
+        !tokenInfo.email ||
+        tokenInfo.email_verified !== "true"
+      ) {
+        return res.status(401).json({ message: "Token do Google invalido" });
+      }
+
+      const googleId = tokenInfo.sub;
+      const email = tokenInfo.email;
+      const name = tokenInfo.name || email.split("@")[0];
 
       let user = await storage.getUserByGoogleId(googleId);
 
@@ -264,7 +292,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/vision/identify", async (req: Request, res: Response) => {
     try {
-      const { image } = req.body;
+      const { image, level } = req.body;
+      const levelLabel =
+        level === "advanced" ? "avancado" : level === "intermediate" ? "intermediario" : "iniciante";
       if (!image) {
         return res.status(400).json({ message: "Imagem e obrigatoria" });
       }
@@ -287,7 +317,8 @@ Responda EXCLUSIVAMENTE em JSON válido com esta estrutura:
       "muscles_secondary": ["músculo secundário 1"],
       "sets": número de séries (3-5),
       "reps": "número de repetições ou duração (ex: '12' ou '30 segundos')",
-      "rest_seconds": segundos de descanso entre séries (30-90)
+      "rest_seconds": segundos de descanso entre séries (30-90),
+      "suggested_weight": "carga sugerida curta (ex: '6–8 kg por halter') ou null se o exercício usa só o peso corporal"
     }
   ]
 }
@@ -296,6 +327,8 @@ Regras:
 - Sugira entre 4 e 6 exercícios variados para o equipamento identificado
 - Use nomes de músculos padronizados: peito, ombros, biceps, triceps, costas_superiores, costas_inferiores, abdomen, quadriceps, isquiotibiais, gluteos, panturrilhas, antebracos
 - As instruções devem ser detalhadas e em português brasileiro
+- O usuário é de nível ${levelLabel}: ajuste séries, repetições e suggested_weight a esse nível
+- Para objetos improvisados (garrafas, mochilas), sugira a carga de forma prática (ex: 'garrafa de 2 L ≈ 2 kg')
 - Se não conseguir identificar um equipamento de exercício, responda com confidence menor que 50
 - Retorne APENAS o JSON, sem markdown ou texto adicional`;
 

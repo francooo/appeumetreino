@@ -48,7 +48,8 @@
         {
           "cameraPermission": "Precisamos acessar sua camera para identificar seus equipamentos."
         }
-      ]
+      ],
+      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true,

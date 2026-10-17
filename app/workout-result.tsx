@@ -124,6 +124,14 @@ export default function WorkoutResultScreen() {
                   </Text>
                 </View>
               </View>
+              {exercise.weight ? (
+                <View style={styles.weightRow}>
+                  <Ionicons name="barbell" size={14} color={Colors.primary} />
+                  <Text style={styles.weightText}>
+                    Peso sugerido: {exercise.weight}
+                  </Text>
+                </View>
+              ) : null}
               <View style={styles.equipmentTag}>
                 <Ionicons name="fitness" size={12} color={Colors.primary} />
                 <Text style={styles.equipmentTagText}>
@@ -318,6 +326,16 @@ const styles = StyleSheet.create({
   detailValue: {
     fontFamily: "Rubik_700Bold",
     fontSize: 14,
+    color: Colors.text,
+  },
+  weightRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  weightText: {
+    fontFamily: "Rubik_500Medium",
+    fontSize: 13,
     color: Colors.text,
   },
   equipmentTag: {

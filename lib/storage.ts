@@ -31,6 +31,7 @@ export interface Exercise {
   reps: string;
   equipment: string;
   restSeconds: number;
+  weight?: string;
   instructions: string;
   mediaUrl: string;
   duration: number;
@@ -131,6 +132,8 @@ export async function addHistory(entry: WorkoutHistory): Promise<void> {
   await AsyncStorage.setItem(KEYS.history, JSON.stringify(items));
 }
 
-export async function clearAllData(): Promise<void> {
-  await AsyncStorage.multiRemove(Object.values(KEYS));
+// Mantem o onboarding marcado como visto: ao sair, o usuario volta direto para o login
+export async function clearUserData(): Promise<void> {
+  const { onboarded, ...userKeys } = KEYS;
+  await AsyncStorage.multiRemove(Object.values(userKeys));
 }
