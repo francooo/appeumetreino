@@ -7,6 +7,7 @@ import React, {
   useEffect,
   type ReactNode,
 } from "react";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import * as storage from "@/lib/storage";
 import { apiRequest } from "@/lib/query-client";
 import type {
@@ -33,6 +34,7 @@ interface AppContextValue {
   loginWithCredentials: (email: string, password: string) => Promise<UserData>;
   loginWithGoogle: (idToken: string) => Promise<UserData>;
   logout: () => Promise<void>;
+  updateAvatar: (avatar: string | null) => Promise<void>;
   setUserLevel: (level: Level) => Promise<void>;
   addUserEquipment: (item: Equipment) => Promise<void>;
   removeUserEquipment: (id: string) => Promise<void>;
@@ -66,11 +68,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (userData?.id) {
         try {
-          const [eq, wk, hist] = await Promise.all([
+          const [remoteUser, eq, wk, hist] = await Promise.all([
+            apiRequest("GET", `/api/user/${userData.id}`).then(r => r.json()),
             apiRequest("GET", `/api/user/${userData.id}/equipment`).then(r => r.json()),
             apiRequest("GET", `/api/user/${userData.id}/workouts`).then(r => r.json()),
             apiRequest("GET", `/api/user/${userData.id}/history`).then(r => r.json()),
           ]);
+          // Mantem nome, nivel e foto em dia com o servidor
+          const freshUser: UserData = { ...userData, ...remoteUser };
+          await storage.setUser(freshUser);
+          setUser(freshUser);
           setEquipmentState(eq);
           setWorkouts(wk);
           setHistory(hist);
@@ -151,6 +158,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [hydrateUserData]);
 
   const logout = useCallback(async () => {
+    // Desconecta do Google para o seletor de contas aparecer no proximo login
+    await GoogleSignin.signOut().catch(() => {});
     await storage.clearUserData();
     setUser(null);
     setLevel(null);
@@ -158,6 +167,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setWorkouts([]);
     setHistory([]);
   }, []);
+
+  const updateAvatar = useCallback(async (avatar: string | null) => {
+    if (!user?.id) return;
+    await apiRequest("PUT", `/api/user/${user.id}/avatar`, { avatar });
+    const updated = { ...user, avatar };
+    await storage.setUser(updated);
+    setUser(updated);
+  }, [user]);
 
   const setUserLevel = useCallback(async (l: Level) => {
     await storage.setLevel(l);
@@ -247,6 +264,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       loginWithCredentials,
       loginWithGoogle,
       logout,
+      updateAvatar,
       setUserLevel,
       addUserEquipment,
       removeUserEquipment,
@@ -269,6 +287,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       loginWithCredentials,
       loginWithGoogle,
       logout,
+      updateAvatar,
       setUserLevel,
       addUserEquipment,
       removeUserEquipment,

@@ -7,8 +7,22 @@ import {
   registerSchema,
   loginSchema,
   googleAuthSchema,
+  type User,
 } from "../shared/schema";
 import { identifyImage, isGroqConfigured } from "./groq";
+
+// Dados do usuario devolvidos ao app (nunca inclui senha nem googleId)
+function toPublicUser(user: User) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    level: user.level,
+    avatar: user.avatar ?? null,
+  };
+}
+
+const MAX_AVATAR_LENGTH = 400_000; // ~300 KB de imagem em base64
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/health", async (_req: Request, res: Response) => {
@@ -52,12 +66,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: hashedPassword,
       });
 
-      res.status(201).json({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        level: user.level,
-      });
+      res.status(201).json(toPublicUser(user));
     } catch (error) {
       console.error("Register error:", error);
       res.status(500).json({ message: "Erro ao criar conta" });
@@ -86,12 +95,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Email ou senha incorretos" });
       }
 
-      res.json({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        level: user.level,
-      });
+      res.json(toPublicUser(user));
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ message: "Erro ao entrar" });
@@ -142,25 +146,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!user) {
         const existingEmail = await storage.getUserByEmail(email);
-        if (existingEmail) {
+        if (existingEmail?.googleId) {
           return res.status(409).json({
-            message: "Email ja cadastrado com outra conta. Use login com email/senha.",
+            message: "Email ja vinculado a outra conta Google.",
           });
         }
-        user = await storage.createUser({
-          name,
-          email,
-          googleId,
-          password: null,
-        });
+        user = existingEmail
+          ? await storage.linkGoogleId(existingEmail.id, googleId)
+          : await storage.createUser({
+              name,
+              email,
+              googleId,
+              password: null,
+            });
       }
 
-      res.json({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        level: user.level,
-      });
+      res.json(toPublicUser(user));
     } catch (error) {
       console.error("Google auth error:", error);
       res.status(500).json({ message: "Erro na autenticacao Google" });
@@ -173,15 +174,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         return res.status(404).json({ message: "Usuario nao encontrado" });
       }
-      res.json({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        level: user.level,
-      });
+      res.json(toPublicUser(user));
     } catch (error) {
       console.error("Get user error:", error);
       res.status(500).json({ message: "Erro ao buscar usuario" });
+    }
+  });
+
+  app.put("/api/user/:id/avatar", async (req: Request, res: Response) => {
+    try {
+      const { avatar } = req.body as { avatar?: string | null };
+      if (avatar !== null) {
+        if (typeof avatar !== "string" || !avatar.startsWith("data:image/jpeg;base64,")) {
+          return res.status(400).json({ message: "Imagem invalida" });
+        }
+        if (avatar.length > MAX_AVATAR_LENGTH) {
+          return res.status(413).json({ message: "Imagem muito grande" });
+        }
+      }
+      const user = await storage.getUser(String(req.params.id));
+      if (!user) {
+        return res.status(404).json({ message: "Usuario nao encontrado" });
+      }
+      await storage.updateUserAvatar(user.id, avatar);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Update avatar error:", error);
+      res.status(500).json({ message: "Erro ao salvar foto" });
     }
   });
 

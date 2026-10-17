@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { useApp } from "@/contexts/AppContext";
+import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
 
 export default function RegisterScreen() {
   const [name, setName] = useState("");
@@ -26,6 +27,7 @@ export default function RegisterScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const insets = useSafeAreaInsets();
   const { register } = useApp();
+  const { signInWithGoogle, isGoogleLoading } = useGoogleSignIn();
 
   const handleRegister = async () => {
     if (!name.trim() || !email.trim() || !password || !confirmPassword) {
@@ -190,13 +192,19 @@ export default function RegisterScreen() {
         </View>
 
         <Pressable
+          onPress={signInWithGoogle}
+          disabled={isGoogleLoading}
           style={({ pressed }) => [
             styles.googleButton,
             pressed && styles.buttonPressed,
+            isGoogleLoading && styles.buttonDisabled,
           ]}
+          accessibilityRole="button"
         >
           <Ionicons name="logo-google" size={20} color={Colors.text} />
-          <Text style={styles.googleText}>Cadastro com Google</Text>
+          <Text style={styles.googleText}>
+            {isGoogleLoading ? "Cadastrando..." : "Cadastro com Google"}
+          </Text>
         </Pressable>
       </View>
 

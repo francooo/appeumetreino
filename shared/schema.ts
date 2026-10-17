@@ -19,6 +19,8 @@ export const users = pgTable("users", {
   password: text("password"),
   googleId: text("google_id").unique(),
   level: text("level"),
+  // Foto de perfil como data URI JPEG pequena (reduzida no app antes do envio)
+  avatar: text("avatar"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

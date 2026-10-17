@@ -15,6 +15,7 @@ import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import Colors from "@/constants/colors";
 import Icon, { type IconName } from "@/components/Icon";
+import Avatar from "@/components/Avatar";
 import { useApp } from "@/contexts/AppContext";
 import { generateWorkout, getExerciseImage } from "@/lib/workout-generator";
 import type { Exercise } from "@/lib/storage";
@@ -163,7 +164,7 @@ export default function HomeScreen() {
           accessibilityRole="button"
           accessibilityLabel="Abrir perfil"
         >
-          <Text style={styles.avatarText}>{firstName.charAt(0).toUpperCase()}</Text>
+          <Avatar user={user} size={52} />
           <View style={styles.avatarStatus} />
         </Pressable>
       </View>
@@ -449,16 +450,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: 52,
     height: 52,
-    borderRadius: 26,
-    backgroundColor: Colors.secondary,
-    alignItems: "center",
-    justifyContent: "center",
     marginLeft: 8,
-  },
-  avatarText: {
-    fontFamily: "Rubik_700Bold",
-    fontSize: 22,
-    color: "#FFFFFF",
   },
   avatarStatus: {
     position: "absolute",

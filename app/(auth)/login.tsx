@@ -14,75 +14,18 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import {
-  GoogleSignin,
-  isErrorWithCode,
-  statusCodes,
-} from "@react-native-google-signin/google-signin";
 import Colors from "@/constants/colors";
 import { useApp } from "@/contexts/AppContext";
-
-// O idToken e emitido para o cliente Web; o cliente Android (pacote + SHA-1) so autoriza o app
-GoogleSignin.configure({
-  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-});
+import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const insets = useSafeAreaInsets();
-  const { loginWithCredentials, loginWithGoogle } = useApp();
-
-  const handleGoogleLogin = async () => {
-    if (Platform.OS === "web") {
-      Alert.alert("Indisponivel", "Login com Google disponivel apenas no app Android.");
-      return;
-    }
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    setIsGoogleLoading(true);
-    try {
-      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-      const result = await GoogleSignin.signIn();
-      if (result.type !== "success") return;
-
-      const idToken = result.data.idToken;
-      if (!idToken) {
-        throw new Error("Google nao retornou idToken");
-      }
-
-      const userData = await loginWithGoogle(idToken);
-
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-      if (!userData.level) {
-        router.replace("/level-select");
-      } else {
-        router.replace("/(tabs)");
-      }
-    } catch (e: any) {
-      if (isErrorWithCode(e) && e.code === statusCodes.IN_PROGRESS) return;
-      console.error("Google auth error:", e);
-      const message = String(e?.message || "");
-      let text = "Falha ao entrar com Google. Tente novamente.";
-      if (message.startsWith("409")) {
-        text = "Este email ja esta cadastrado com senha. Entre com email e senha.";
-      } else if (message.startsWith("401")) {
-        text = "O servidor recusou o token do Google (cliente Web nao confere).";
-      } else if (isErrorWithCode(e)) {
-        // Codigo nativo (ex.: DEVELOPER_ERROR = cliente Android/SHA-1 nao cadastrado no projeto)
-        text = `Falha ao entrar com Google.\n\nCodigo: ${e.code}\n${message}`;
-      } else if (message) {
-        text = `Falha ao entrar com Google.\n\n${message}`;
-      }
-      Alert.alert("Erro", text);
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  };
+  const { loginWithCredentials } = useApp();
+  const { signInWithGoogle, isGoogleLoading } = useGoogleSignIn();
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -227,7 +170,7 @@ export default function LoginScreen() {
         </View>
 
         <Pressable
-          onPress={handleGoogleLogin}
+          onPress={signInWithGoogle}
           disabled={isGoogleLoading}
           style={({ pressed }) => [
             styles.googleButton,

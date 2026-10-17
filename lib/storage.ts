@@ -14,6 +14,7 @@ export interface UserData {
   name: string;
   email: string;
   level?: string | null;
+  avatar?: string | null;
 }
 
 export type Level = "beginner" | "intermediate" | "advanced";

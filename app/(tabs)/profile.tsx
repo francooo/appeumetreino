@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,18 +7,96 @@ import {
   Platform,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
+import * as ImagePicker from "expo-image-picker";
+import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import Colors from "@/constants/colors";
+import Avatar from "@/components/Avatar";
+import Icon from "@/components/Icon";
 import { useApp } from "@/contexts/AppContext";
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
-  const { user, level, equipment, workouts, history, logout } = useApp();
+  const { user, level, equipment, workouts, history, logout, updateAvatar } = useApp();
+  const [isSavingAvatar, setIsSavingAvatar] = useState(false);
+
+  const saveAvatar = async (uri: string) => {
+    setIsSavingAvatar(true);
+    try {
+      // Reduz para 400x400 JPEG (~30-60 KB) antes de enviar e salvar no banco
+      const result = await manipulateAsync(uri, [{ resize: { width: 400, height: 400 } }], {
+        compress: 0.7,
+        format: SaveFormat.JPEG,
+        base64: true,
+      });
+      if (!result.base64) throw new Error("Falha ao processar a imagem");
+      await updateAvatar(`data:image/jpeg;base64,${result.base64}`);
+    } catch (e) {
+      console.error("Avatar error:", e);
+      Alert.alert("Erro", "Nao foi possivel salvar a foto. Tente novamente.");
+    } finally {
+      setIsSavingAvatar(false);
+    }
+  };
+
+  const pickAvatar = async (source: "camera" | "library") => {
+    const permission =
+      source === "camera"
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert(
+        "Permissao necessaria",
+        source === "camera"
+          ? "Permita o acesso a camera para tirar a foto."
+          : "Permita o acesso as fotos para escolher uma imagem.",
+      );
+      return;
+    }
+    const options: ImagePicker.ImagePickerOptions = {
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    };
+    const result =
+      source === "camera"
+        ? await ImagePicker.launchCameraAsync(options)
+        : await ImagePicker.launchImageLibraryAsync(options);
+    if (!result.canceled && result.assets[0]?.uri) {
+      await saveAvatar(result.assets[0].uri);
+    }
+  };
+
+  const handleAvatarPress = () => {
+    const buttons: { text: string; style?: "cancel" | "destructive"; onPress?: () => void }[] = [
+      { text: "Tirar foto", onPress: () => pickAvatar("camera") },
+      { text: "Escolher da galeria", onPress: () => pickAvatar("library") },
+    ];
+    if (user?.avatar) {
+      buttons.push({
+        text: "Remover foto",
+        style: "destructive",
+        onPress: async () => {
+          setIsSavingAvatar(true);
+          try {
+            await updateAvatar(null);
+          } catch {
+            Alert.alert("Erro", "Nao foi possivel remover a foto.");
+          } finally {
+            setIsSavingAvatar(false);
+          }
+        },
+      });
+    }
+    buttons.push({ text: "Cancelar", style: "cancel" });
+    Alert.alert("Foto de perfil", undefined, buttons);
+  };
 
   const handleLogout = () => {
     Alert.alert("Sair", "Deseja realmente sair?", [
@@ -65,14 +143,28 @@ export default function ProfileScreen() {
       <Text style={styles.title}>Perfil</Text>
 
       <View style={styles.profileCard}>
-        <LinearGradient
-          colors={[Colors.primary, Colors.primary]}
-          style={styles.profileAvatar}
+        <Pressable
+          onPress={handleAvatarPress}
+          disabled={isSavingAvatar}
+          style={({ pressed }) => [styles.profileAvatar, pressed && { opacity: 0.8 }]}
+          accessibilityRole="button"
+          accessibilityLabel="Alterar foto de perfil"
         >
-          <Text style={styles.profileAvatarText}>
-            {(user?.name || "A").charAt(0).toUpperCase()}
-          </Text>
-        </LinearGradient>
+          <Avatar
+            user={user}
+            size={96}
+            backgroundColor={Colors.primary}
+            textColor={Colors.onPrimary}
+          />
+          {isSavingAvatar && (
+            <View style={styles.avatarLoading}>
+              <ActivityIndicator color="#FFFFFF" />
+            </View>
+          )}
+          <View style={styles.avatarBadge}>
+            <Icon name="camera" size={16} color={Colors.onPrimary} strokeWidth={2.2} />
+          </View>
+        </Pressable>
         <Text style={styles.profileName}>{user?.name || "Atleta"}</Text>
         <Text style={styles.profileEmail}>{user?.email || ""}</Text>
         <View style={styles.levelChip}>
@@ -199,17 +291,29 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   profileAvatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 28,
-    justifyContent: "center",
-    alignItems: "center",
+    width: 96,
+    height: 96,
     marginBottom: 4,
   },
-  profileAvatarText: {
-    fontFamily: "Rubik_700Bold",
-    fontSize: 32,
-    color: Colors.onPrimary,
+  avatarLoading: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 48,
+    backgroundColor: "rgba(17,19,24,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarBadge: {
+    position: "absolute",
+    right: -2,
+    bottom: -2,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: Colors.primary,
+    borderWidth: 3,
+    borderColor: Colors.card,
+    alignItems: "center",
+    justifyContent: "center",
   },
   profileName: {
     fontFamily: "Rubik_700Bold",
