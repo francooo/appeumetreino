@@ -2,6 +2,7 @@
   "expo": {
     "name": "Eu me treino",
     "slug": "eu-me-treino",
+    "owner": "francooo",
     "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",

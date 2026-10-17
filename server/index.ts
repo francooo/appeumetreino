@@ -8,12 +8,12 @@ import * as path from "path";
 const app = express();
 const log = console.log;
 
-if (!process.env.GEMINI_API_KEY) {
+if (!process.env.GROQ_API_KEY) {
   console.warn(
-    "AVISO: GEMINI_API_KEY nao encontrada no .env. Identificacao de equipamentos por IA nao funcionara.",
+    "AVISO: GROQ_API_KEY nao encontrada no .env. Identificacao de equipamentos por IA nao funcionara.",
   );
 } else {
-  console.log("GEMINI_API_KEY carregada. Identificacao por IA ativa.");
+  console.log("GROQ_API_KEY carregada. Identificacao por IA ativa.");
 }
 
 declare module "http" {

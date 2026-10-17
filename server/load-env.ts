@@ -1,6 +1,6 @@
 /**
  * Deve ser o primeiro import do servidor para que process.env esteja
- * preenchido antes de qualquer outro módulo (ex.: gemini.ts) ser carregado.
+ * preenchido antes de qualquer outro módulo (ex.: groq.ts) ser carregado.
  */
 import dotenv from "dotenv";
 import path from "path";

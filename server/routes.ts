@@ -8,7 +8,7 @@ import {
   loginSchema,
   googleAuthSchema,
 } from "@shared/schema";
-import { geminiModel } from "./gemini";
+import { identifyImage, isGroqConfigured } from "./groq";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/health", async (_req: Request, res: Response) => {
@@ -299,23 +299,13 @@ Regras:
 - Se não conseguir identificar um equipamento de exercício, responda com confidence menor que 50
 - Retorne APENAS o JSON, sem markdown ou texto adicional`;
 
-      if (!geminiModel) {
+      if (!isGroqConfigured) {
         return res.status(503).json({
-          message: "GEMINI_API_KEY nao configurada. Adicione no .env para usar identificacao por IA.",
+          message: "GROQ_API_KEY nao configurada. Adicione no .env para usar identificacao por IA.",
         });
       }
 
-      const result = await geminiModel.generateContent([
-        {
-          inlineData: {
-            mimeType: "image/jpeg",
-            data: base64Data,
-          },
-        },
-        prompt,
-      ]);
-
-      const responseText = result.response.text();
+      const responseText = await identifyImage(base64Data, prompt);
 
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
