@@ -37,8 +37,8 @@ export default function WorkoutsScreen() {
     setIsGenerating(true);
     try {
       const workout = generateWorkout(equipment, level || "beginner");
-      await saveUserWorkout(workout);
-      router.push({ pathname: "/workout-result", params: { workoutId: workout.id } });
+      const saved = await saveUserWorkout(workout);
+      router.push({ pathname: "/workout-result", params: { workoutId: saved.id } });
     } finally {
       setIsGenerating(false);
     }

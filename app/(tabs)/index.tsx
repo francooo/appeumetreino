@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -17,7 +18,7 @@ import Colors from "@/constants/colors";
 import Icon, { type IconName } from "@/components/Icon";
 import Avatar from "@/components/Avatar";
 import { useApp } from "@/contexts/AppContext";
-import { generateWorkout, getExerciseImage } from "@/lib/workout-generator";
+import { generateWorkout, getExerciseImage, swapExercise } from "@/lib/workout-generator";
 import type { Exercise } from "@/lib/storage";
 
 function greeting() {
@@ -64,10 +65,15 @@ function MetricCard({
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { user, level, equipment, workouts, history, saveUserWorkout } = useApp();
+  const { user, level, equipment, workouts, history, saveUserWorkout, updateUserWorkout } = useApp();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [swappingIndex, setSwappingIndex] = useState<number | null>(null);
 
-  const latestWorkout = workouts.length > 0 ? workouts[workouts.length - 1] : null;
+  // Treino mais recente pela data de criacao (a ordem vinda do servidor nao e garantida)
+  const latestWorkout =
+    workouts.length > 0
+      ? workouts.reduce((a, b) => ((b.createdAt || 0) >= (a.createdAt || 0) ? b : a))
+      : null;
   const firstName = (user?.name || "Atleta").split(" ")[0];
   const nextExercises = latestWorkout?.exercises ?? [];
   const firstExercise = latestWorkout?.exercises[0];
@@ -101,6 +107,27 @@ export default function HomeScreen() {
       await saveUserWorkout(workout);
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleSwap = async (index: number) => {
+    if (!latestWorkout || swappingIndex !== null) return;
+    const updated = swapExercise(latestWorkout, index, equipment, level || "beginner");
+    if (!updated) {
+      Alert.alert(
+        "Sem alternativas",
+        "Não há outro exercício disponível com seus equipamentos.",
+      );
+      return;
+    }
+    setSwappingIndex(index);
+    try {
+      await updateUserWorkout(updated);
+      if (Platform.OS !== "web") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+    } finally {
+      setSwappingIndex(null);
     }
   };
 
@@ -388,9 +415,22 @@ export default function HomeScreen() {
                     {ex.sets} séries × {ex.reps} reps
                   </Text>
                 </View>
-                <View style={styles.chevronCircle}>
-                  <Icon name="chevron-right" size={20} color={Colors.text} />
-                </View>
+                <Pressable
+                  onPress={() => handleSwap(idx)}
+                  disabled={swappingIndex !== null}
+                  style={({ pressed }) => [styles.swapBtn, pressed && styles.pressed]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Trocar ${ex.name}`}
+                  hitSlop={6}
+                  testID={`swap-exercise-${idx}`}
+                >
+                  {swappingIndex === idx ? (
+                    <ActivityIndicator size="small" color={Colors.text} />
+                  ) : (
+                    <Icon name="refresh" size={20} color={Colors.text} strokeWidth={2.2} />
+                  )}
+                </Pressable>
+                <Icon name="chevron-right" size={20} color={Colors.textSecondary} />
               </Pressable>
             );
           })}
@@ -748,7 +788,7 @@ const styles = StyleSheet.create({
   exerciseRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
+    gap: 10,
     backgroundColor: Colors.card,
     borderRadius: 18,
     borderWidth: 1,
@@ -757,8 +797,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   thumbWrap: {
-    width: 96,
-    height: 68,
+    width: 76,
+    height: 60,
     borderRadius: 12,
     overflow: "hidden",
     backgroundColor: Colors.heroDark,
@@ -797,11 +837,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textSecondary,
   },
-  chevronCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.backgroundLight,
+  swapBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.limeSoft,
     alignItems: "center",
     justifyContent: "center",
   },

@@ -48,10 +48,10 @@ export default function ProcessingScreen() {
   useEffect(() => {
     const timer = setTimeout(async () => {
       const workout = generateWorkout(equipment, level || "beginner");
-      await saveUserWorkout(workout);
+      const saved = await saveUserWorkout(workout);
       router.replace({
         pathname: "/workout-result",
-        params: { workoutId: workout.id },
+        params: { workoutId: saved.id },
       });
     }, 3500);
 

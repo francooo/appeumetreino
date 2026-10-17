@@ -38,12 +38,20 @@ interface AppContextValue {
   setUserLevel: (level: Level) => Promise<void>;
   addUserEquipment: (item: Equipment) => Promise<void>;
   removeUserEquipment: (id: string) => Promise<void>;
-  saveUserWorkout: (workout: Workout) => Promise<void>;
+  saveUserWorkout: (workout: Workout) => Promise<Workout>;
+  updateUserWorkout: (workout: Workout) => Promise<void>;
   addWorkoutHistory: (entry: WorkoutHistory) => Promise<void>;
   refreshData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
+
+function normalizeWorkouts(items: any[]): Workout[] {
+  return (items || []).map((w) => ({
+    ...w,
+    createdAt: typeof w.createdAt === "number" ? w.createdAt : new Date(w.createdAt).getTime() || 0,
+  }));
+}
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -79,7 +87,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           await storage.setUser(freshUser);
           setUser(freshUser);
           setEquipmentState(eq);
-          setWorkouts(wk);
+          setWorkouts(normalizeWorkouts(wk));
           setHistory(hist);
         } catch (e) {
           console.error("Failed to load remote data:", e);
@@ -89,7 +97,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             storage.getHistory(),
           ]);
           setEquipmentState(eq);
-          setWorkouts(wk);
+          setWorkouts(normalizeWorkouts(wk));
           setHistory(hist);
         }
       }
@@ -119,7 +127,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           apiRequest("GET", `/api/user/${userData.id}/history`).then(r => r.json()),
         ]);
         setEquipmentState(eq);
-        setWorkouts(wk);
+        setWorkouts(normalizeWorkouts(wk));
         setHistory(hist);
       } catch (e) {
         console.error("Failed to hydrate user data:", e);
@@ -215,10 +223,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
-  const saveUserWorkout = useCallback(async (workout: Workout) => {
-    await storage.saveWorkout(workout);
+  const putWorkoutInState = useCallback((workout: Workout, replaceId?: string) => {
     setWorkouts((prev) => {
-      const idx = prev.findIndex((w) => w.id === workout.id);
+      const matchId = replaceId ?? workout.id;
+      const idx = prev.findIndex((w) => w.id === matchId);
       if (idx >= 0) {
         const copy = [...prev];
         copy[idx] = workout;
@@ -226,14 +234,55 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, workout];
     });
-    if (user?.id) {
-      try {
-        await apiRequest("POST", `/api/user/${user.id}/workouts`, workout);
-      } catch (e) {
-        console.error("Failed to save workout on server:", e);
+  }, []);
+
+  // Cria o treino no servidor e passa a usar o UUID gerado pelo banco no lugar do id local
+  const createOnServer = useCallback(async (workout: Workout): Promise<Workout> => {
+    if (!user?.id) return workout;
+    const res = await apiRequest("POST", `/api/user/${user.id}/workouts`, workout);
+    const saved = await res.json();
+    if (saved?.id && saved.id !== workout.id) {
+      const withServerId = { ...workout, id: saved.id };
+      await storage.replaceWorkoutId(workout.id, withServerId);
+      putWorkoutInState(withServerId, workout.id);
+      return withServerId;
+    }
+    return workout;
+  }, [user, putWorkoutInState]);
+
+  // Devolve o treino com o id final (do servidor, quando disponivel) para as telas navegarem
+  const saveUserWorkout = useCallback(async (workout: Workout): Promise<Workout> => {
+    await storage.saveWorkout(workout);
+    putWorkoutInState(workout);
+    try {
+      return await createOnServer(workout);
+    } catch (e) {
+      console.error("Failed to save workout on server:", e);
+      return workout;
+    }
+  }, [putWorkoutInState, createOnServer]);
+
+  const updateUserWorkout = useCallback(async (workout: Workout) => {
+    await storage.saveWorkout(workout);
+    putWorkoutInState(workout);
+    if (!user?.id) return;
+    try {
+      const res = await apiRequest("PUT", `/api/user/${user.id}/workouts/${workout.id}`, {
+        exercises: workout.exercises,
+        duration: workout.duration,
+      });
+      await res.json();
+    } catch (e: any) {
+      // Treino ainda com id local (servidor indisponivel quando foi criado): cria agora
+      if (String(e?.message || "").startsWith("404")) {
+        await createOnServer(workout).catch((err) =>
+          console.error("Failed to create workout on server:", err),
+        );
+      } else {
+        console.error("Failed to update workout on server:", e);
       }
     }
-  }, [user]);
+  }, [user, putWorkoutInState, createOnServer]);
 
   const addWorkoutHistory = useCallback(async (entry: WorkoutHistory) => {
     await storage.addHistory(entry);
@@ -269,6 +318,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addUserEquipment,
       removeUserEquipment,
       saveUserWorkout,
+      updateUserWorkout,
       addWorkoutHistory,
       refreshData: loadData,
     }),
@@ -292,6 +342,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addUserEquipment,
       removeUserEquipment,
       saveUserWorkout,
+      updateUserWorkout,
       addWorkoutHistory,
       loadData,
     ],

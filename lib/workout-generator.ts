@@ -411,55 +411,75 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-export function generateWorkout(
-  equipment: Equipment[],
-  level: Level,
-): Workout {
-  const exercisePool: ExerciseTemplate[] = [];
+// Pool de exercicios para os equipamentos do usuario, sem nomes repetidos
+// (ex.: "Agachamento Livre" existe em barbell e generic)
+function buildExercisePool(equipment: Equipment[]): ExerciseTemplate[] {
+  const pool: ExerciseTemplate[] = [];
   const detectedTypes = new Set<string>();
+  const names = new Set<string>();
+
+  const add = (templates: ExerciseTemplate[]) => {
+    for (const t of templates) {
+      if (!names.has(t.name)) {
+        names.add(t.name);
+        pool.push(t);
+      }
+    }
+  };
 
   for (const eq of equipment) {
     const type = detectEquipmentType(eq.name);
     if (!detectedTypes.has(type)) {
       detectedTypes.add(type);
-      const templates = EQUIPMENT_EXERCISES[type] || EQUIPMENT_EXERCISES.generic;
-      exercisePool.push(...templates);
+      add(EQUIPMENT_EXERCISES[type] || EQUIPMENT_EXERCISES.generic);
     }
   }
 
-  if (exercisePool.length === 0) {
-    exercisePool.push(...EQUIPMENT_EXERCISES.generic);
+  if (pool.length === 0) {
+    add(EQUIPMENT_EXERCISES.generic);
   }
+  return pool;
+}
 
-  const shuffled = shuffle(exercisePool);
+function exerciseSeconds(sets: number, reps: string, restSeconds: number): number {
+  const repTime = reps.includes("s") ? parseInt(reps) || 30 : (parseInt(reps) || 12) * 3;
+  return sets * (repTime + restSeconds);
+}
+
+function templateToExercise(t: ExerciseTemplate, level: Level): Exercise {
+  const sets = t.sets[level];
+  const reps = t.reps[level];
+  const restSeconds = t.rest[level];
+  return {
+    name: t.name,
+    sets,
+    reps,
+    equipment: t.equipment,
+    restSeconds,
+    weight: t.weight?.[level],
+    instructions: t.instructions,
+    mediaUrl: "",
+    duration: exerciseSeconds(sets, reps, restSeconds),
+  };
+}
+
+function workoutDuration(exercises: Exercise[]): string {
+  const totalSeconds = exercises.reduce(
+    (sum, e) => sum + exerciseSeconds(e.sets, e.reps, e.restSeconds),
+    0,
+  );
+  return `${Math.round(totalSeconds / 60)} min`;
+}
+
+export function generateWorkout(
+  equipment: Equipment[],
+  level: Level,
+): Workout {
+  const shuffled = shuffle(buildExercisePool(equipment));
   const maxExercises = level === "beginner" ? 5 : level === "intermediate" ? 6 : 8;
-  const selected = shuffled.slice(0, Math.min(maxExercises, shuffled.length));
-
-  const exercises: Exercise[] = selected.map((t) => {
-    const sets = t.sets[level];
-    const repsStr = t.reps[level];
-    const restSeconds = t.rest[level];
-    const repTime = repsStr.includes("s") ? parseInt(repsStr) : parseInt(repsStr) * 3;
-    const duration = sets * (repTime + restSeconds);
-    return {
-      name: t.name,
-      sets,
-      reps: repsStr,
-      equipment: t.equipment,
-      restSeconds,
-      weight: t.weight?.[level],
-      instructions: t.instructions,
-      mediaUrl: "",
-      duration,
-    };
-  });
-
-  const totalMinutes = exercises.reduce((sum, e) => {
-    const repTime = e.reps.includes("s") ? parseInt(e.reps) : parseInt(e.reps) * 3;
-    return sum + e.sets * (repTime + e.restSeconds);
-  }, 0);
-
-  const durationMin = Math.round(totalMinutes / 60);
+  const exercises = shuffled
+    .slice(0, Math.min(maxExercises, shuffled.length))
+    .map((t) => templateToExercise(t, level));
 
   const id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
 
@@ -469,8 +489,33 @@ export function generateWorkout(
     exercises,
     level,
     createdAt: Date.now(),
-    duration: `${durationMin} min`,
+    duration: workoutDuration(exercises),
   };
+}
+
+// Troca so o exercicio da posicao `index` por outro que ainda nao esta no treino.
+// Prefere o mesmo equipamento; devolve null se nao houver alternativa.
+export function swapExercise(
+  workout: Workout,
+  index: number,
+  equipment: Equipment[],
+  level: Level,
+): Workout | null {
+  const current = workout.exercises[index];
+  if (!current) return null;
+
+  const usedNames = new Set(workout.exercises.map((e) => e.name));
+  const candidates = buildExercisePool(equipment).filter((t) => !usedNames.has(t.name));
+  if (candidates.length === 0) return null;
+
+  const sameEquipment = candidates.filter((t) => t.equipment === current.equipment);
+  const options = sameEquipment.length > 0 ? sameEquipment : candidates;
+  const picked = options[Math.floor(Math.random() * options.length)];
+
+  const exercises = workout.exercises.map((e, i) =>
+    i === index ? templateToExercise(picked, level) : e,
+  );
+  return { ...workout, exercises, duration: workoutDuration(exercises) };
 }
 
 export const EQUIPMENT_OPTIONS = [

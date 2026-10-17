@@ -282,6 +282,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/user/:id/workouts/:workoutId", async (req: Request, res: Response) => {
+    try {
+      const { exercises, duration } = req.body;
+      if (!Array.isArray(exercises) || exercises.length === 0 || typeof duration !== "string") {
+        return res.status(400).json({ message: "Dados invalidos" });
+      }
+      const workoutId = String(req.params.workoutId);
+      // Ids locais do app (nao-UUID) nunca existem no banco
+      if (!/^[0-9a-f-]{36}$/i.test(workoutId)) {
+        return res.status(404).json({ message: "Treino nao encontrado" });
+      }
+      const updated = await storage.updateWorkout(String(req.params.id), workoutId, {
+        exercises,
+        duration,
+      });
+      if (!updated) {
+        return res.status(404).json({ message: "Treino nao encontrado" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error("Update workout error:", error);
+      res.status(500).json({ message: "Erro ao atualizar treino" });
+    }
+  });
+
   app.get("/api/user/:id/history", async (req: Request, res: Response) => {
     try {
       const items = await storage.getHistoryByUser(req.params.id);

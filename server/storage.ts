@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "./db";
 import {
   users,
@@ -25,6 +25,11 @@ export interface IStorage {
   removeEquipment(id: string, userId: string): Promise<void>;
   getWorkoutsByUser(userId: string): Promise<Workout[]>;
   saveWorkout(userId: string, workout: Omit<Workout, "userId">): Promise<Workout>;
+  updateWorkout(
+    userId: string,
+    workoutId: string,
+    data: Pick<Workout, "exercises" | "duration">,
+  ): Promise<Workout | undefined>;
   getHistoryByUser(userId: string): Promise<WorkoutHistory[]>;
   addHistory(userId: string, entry: Omit<WorkoutHistory, "userId">): Promise<WorkoutHistory>;
 }
@@ -112,6 +117,19 @@ export class DatabaseStorage implements IStorage {
       .values({ ...workout, userId })
       .returning();
     return saved;
+  }
+
+  async updateWorkout(
+    userId: string,
+    workoutId: string,
+    data: Pick<Workout, "exercises" | "duration">,
+  ): Promise<Workout | undefined> {
+    const [updated] = await db
+      .update(workouts)
+      .set(data)
+      .where(and(eq(workouts.id, workoutId), eq(workouts.userId, userId)))
+      .returning();
+    return updated;
   }
 
   async getHistoryByUser(userId: string): Promise<WorkoutHistory[]> {

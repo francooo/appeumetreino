@@ -111,6 +111,12 @@ export async function getWorkouts(): Promise<Workout[]> {
   return val ? JSON.parse(val) : [];
 }
 
+export async function replaceWorkoutId(oldId: string, workout: Workout): Promise<void> {
+  const items = (await getWorkouts()).filter((w) => w.id !== oldId && w.id !== workout.id);
+  items.push(workout);
+  await AsyncStorage.setItem(KEYS.workouts, JSON.stringify(items));
+}
+
 export async function saveWorkout(workout: Workout): Promise<void> {
   const items = await getWorkouts();
   const idx = items.findIndex((w) => w.id === workout.id);
