@@ -18,7 +18,7 @@
       },
       "env": {
         "EXPO_PUBLIC_DOMAIN": "appeumetreino.vercel.app:443",
-        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "464677533457-ssi1l7f656rp8efgsakq62roag5tns13.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "471522397558-prav14pvcopf2liqm9a0vdl5r3qa3gll.apps.googleusercontent.com"
       }
     },
     "production": {
@@ -27,7 +27,7 @@
       },
       "env": {
         "EXPO_PUBLIC_DOMAIN": "appeumetreino.vercel.app:443",
-        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "464677533457-ssi1l7f656rp8efgsakq62roag5tns13.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "471522397558-prav14pvcopf2liqm9a0vdl5r3qa3gll.apps.googleusercontent.com"
       }
     }
   },
