@@ -67,12 +67,18 @@ export default function LoginScreen() {
       if (isErrorWithCode(e) && e.code === statusCodes.IN_PROGRESS) return;
       console.error("Google auth error:", e);
       const message = String(e?.message || "");
-      Alert.alert(
-        "Erro",
-        message.startsWith("409")
-          ? "Este email ja esta cadastrado com senha. Entre com email e senha."
-          : "Falha ao entrar com Google. Tente novamente.",
-      );
+      let text = "Falha ao entrar com Google. Tente novamente.";
+      if (message.startsWith("409")) {
+        text = "Este email ja esta cadastrado com senha. Entre com email e senha.";
+      } else if (message.startsWith("401")) {
+        text = "O servidor recusou o token do Google (cliente Web nao confere).";
+      } else if (isErrorWithCode(e)) {
+        // Codigo nativo (ex.: DEVELOPER_ERROR = cliente Android/SHA-1 nao cadastrado no projeto)
+        text = `Falha ao entrar com Google.\n\nCodigo: ${e.code}\n${message}`;
+      } else if (message) {
+        text = `Falha ao entrar com Google.\n\n${message}`;
+      }
+      Alert.alert("Erro", text);
     } finally {
       setIsGoogleLoading(false);
     }

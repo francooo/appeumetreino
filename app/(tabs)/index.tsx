@@ -68,7 +68,7 @@ export default function HomeScreen() {
 
   const latestWorkout = workouts.length > 0 ? workouts[workouts.length - 1] : null;
   const firstName = (user?.name || "Atleta").split(" ")[0];
-  const nextExercises = latestWorkout?.exercises.slice(0, 3) ?? [];
+  const nextExercises = latestWorkout?.exercises ?? [];
   const firstExercise = latestWorkout?.exercises[0];
   const heroImage = firstExercise
     ? getExerciseImage(firstExercise.name, firstExercise.equipment)
@@ -302,6 +302,26 @@ export default function HomeScreen() {
           {"MAIS\nFORTE\nHOJE"}
         </Text>
       </View>
+
+      {/* Gerar outro treino (o cartao acima ja oferece isso quando nao ha treino) */}
+      {latestWorkout && (
+        <Pressable
+          onPress={handleNewWorkout}
+          disabled={isGenerating}
+          style={({ pressed }) => [
+            styles.generateBtn,
+            pressed && styles.pressed,
+            isGenerating && styles.disabled,
+          ]}
+          accessibilityRole="button"
+          testID="generate-workout-button"
+        >
+          <Icon name="plus" size={20} color={Colors.text} strokeWidth={2.2} />
+          <Text style={styles.generateBtnText}>
+            {isGenerating ? "Gerando..." : "Gerar novo treino"}
+          </Text>
+        </Pressable>
+      )}
 
       {/* Progresso */}
       {workouts.length > 0 && (
@@ -655,6 +675,23 @@ const styles = StyleSheet.create({
     transform: [{ rotate: "-6deg" }],
   },
 
+  generateBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    minHeight: 52,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: Colors.text,
+    backgroundColor: Colors.card,
+    marginBottom: 12,
+  },
+  generateBtnText: {
+    fontFamily: "Rubik_600SemiBold",
+    fontSize: 16,
+    color: Colors.text,
+  },
   progressCard: {
     flexDirection: "row",
     alignItems: "center",
