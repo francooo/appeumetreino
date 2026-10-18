@@ -1,16 +1,22 @@
-import { and, eq } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lte } from "drizzle-orm";
 import { db } from "./db";
 import {
   users,
   equipment,
   workouts,
   workoutHistory,
+  meals,
+  weights,
+  type Meal,
+  type WeightEntry,
   type User,
   type InsertUser,
   type Equipment,
   type Workout,
   type WorkoutHistory,
 } from "../shared/schema";
+
+export type MealInput = Pick<Meal, "day" | "eatenAt" | "mealType" | "name" | "kcal" | "photo" | "items">;
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -21,6 +27,14 @@ export interface IStorage {
   linkGoogleId(userId: string, googleId: string): Promise<User>;
   updateUserAvatar(userId: string, avatar: string | null): Promise<void>;
   updateUserName(userId: string, name: string): Promise<User | undefined>;
+  updateCalorieGoal(userId: string, goal: number): Promise<void>;
+  getMealsByDay(userId: string, day: string): Promise<Meal[]>;
+  addMeal(userId: string, meal: MealInput): Promise<Meal>;
+  updateMeal(userId: string, mealId: string, meal: MealInput): Promise<Meal | undefined>;
+  deleteMeal(userId: string, mealId: string): Promise<boolean>;
+  getWeights(userId: string, from: string, to: string): Promise<WeightEntry[]>;
+  getLatestWeight(userId: string): Promise<WeightEntry | undefined>;
+  saveWeight(userId: string, day: string, kg: number): Promise<WeightEntry>;
   getEquipmentByUser(userId: string): Promise<Equipment[]>;
   addEquipment(userId: string, name: string, imageUri?: string): Promise<Equipment>;
   removeEquipment(id: string, userId: string): Promise<void>;
@@ -79,6 +93,68 @@ export class DatabaseStorage implements IStorage {
   async updateUserName(userId: string, name: string): Promise<User | undefined> {
     const [user] = await db.update(users).set({ name }).where(eq(users.id, userId)).returning();
     return user;
+  }
+
+  async updateCalorieGoal(userId: string, goal: number): Promise<void> {
+    await db.update(users).set({ calorieGoal: goal }).where(eq(users.id, userId));
+  }
+
+  async getMealsByDay(userId: string, day: string): Promise<Meal[]> {
+    return db
+      .select()
+      .from(meals)
+      .where(and(eq(meals.userId, userId), eq(meals.day, day)))
+      .orderBy(asc(meals.eatenAt));
+  }
+
+  async addMeal(userId: string, meal: MealInput): Promise<Meal> {
+    const [saved] = await db.insert(meals).values({ ...meal, userId }).returning();
+    return saved;
+  }
+
+  async updateMeal(userId: string, mealId: string, meal: MealInput): Promise<Meal | undefined> {
+    const [saved] = await db
+      .update(meals)
+      .set(meal)
+      .where(and(eq(meals.id, mealId), eq(meals.userId, userId)))
+      .returning();
+    return saved;
+  }
+
+  async deleteMeal(userId: string, mealId: string): Promise<boolean> {
+    const deleted = await db
+      .delete(meals)
+      .where(and(eq(meals.id, mealId), eq(meals.userId, userId)))
+      .returning({ id: meals.id });
+    return deleted.length > 0;
+  }
+
+  async getWeights(userId: string, from: string, to: string): Promise<WeightEntry[]> {
+    return db
+      .select()
+      .from(weights)
+      .where(and(eq(weights.userId, userId), gte(weights.day, from), lte(weights.day, to)))
+      .orderBy(asc(weights.day));
+  }
+
+  async getLatestWeight(userId: string): Promise<WeightEntry | undefined> {
+    const [latest] = await db
+      .select()
+      .from(weights)
+      .where(eq(weights.userId, userId))
+      .orderBy(desc(weights.day))
+      .limit(1);
+    return latest;
+  }
+
+  async saveWeight(userId: string, day: string, kg: number): Promise<WeightEntry> {
+    // Um registro por dia: registrar de novo no mesmo dia substitui o valor
+    const [saved] = await db
+      .insert(weights)
+      .values({ userId, day, kg })
+      .onConflictDoUpdate({ target: [weights.userId, weights.day], set: { kg } })
+      .returning();
+    return saved;
   }
 
   async getEquipmentByUser(userId: string): Promise<Equipment[]> {

@@ -18,6 +18,10 @@ function NativeTabLayout() {
         <NativeIcon sf={{ default: "list.bullet", selected: "list.bullet" }} />
         <Label>Treinos</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="calories">
+        <NativeIcon sf={{ default: "flame", selected: "flame.fill" }} />
+        <Label>Calorias</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile">
         <NativeIcon sf={{ default: "person", selected: "person.fill" }} />
         <Label>Perfil</Label>
@@ -67,6 +71,7 @@ function ClassicTabLayout() {
     >
       <Tabs.Screen name="index" options={tabOptions("Início", "home")} />
       <Tabs.Screen name="workouts" options={tabOptions("Treinos", "list")} />
+      <Tabs.Screen name="calories" options={tabOptions("Calorias", "fire")} />
       <Tabs.Screen name="profile" options={tabOptions("Perfil", "user")} />
     </Tabs>
   );

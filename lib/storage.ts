@@ -15,6 +15,26 @@ export interface UserData {
   email: string;
   level?: string | null;
   avatar?: string | null;
+  calorieGoal?: number | null;
+}
+
+export type MealType = "breakfast" | "lunch" | "snack" | "dinner";
+
+export interface Meal {
+  id: string;
+  day: string;
+  eatenAt: string;
+  mealType: MealType;
+  name: string;
+  kcal: number;
+  photo: string | null;
+  items: { name: string; kcal: number }[] | null;
+}
+
+export interface WeightEntry {
+  id: string;
+  day: string;
+  kg: number;
 }
 
 export type Level = "beginner" | "intermediate" | "advanced";

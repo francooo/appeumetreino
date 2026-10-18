@@ -2,8 +2,19 @@ import React from "react";
 import { SvgXml } from "react-native-svg";
 
 // Gerado a partir de assets/images/meutreinador_assetsv2/icons (viewBox 24x24, traco em currentColor).
+// Icones do medidor de calorias vem de meutreinador_calorias_assets/icons_svg.
 // "refresh" nao existe no pacote e foi desenhado no mesmo estilo.
 const ICONS = {
+  "fire": "<path d=\"M12 22a8 8 0 0 0 8-8c0-4-3-6-4-10-2 2-3 4-3 6-2-1-3-3-3-5-4 3-6 6-6 10a8 8 0 0 0 8 7z\"/><path d=\"M12 22a4 4 0 0 0 4-4c0-2-1-3-2-4-.5 1.5-1.5 2-2 2.5-.5-1-1-1.5-1-3-2 1.5-3 3-3 5a4 4 0 0 0 4 3.5z\"/>",
+  "utensils": "<path d=\"M7 3v7M4 3v5a3 3 0 0 0 6 0V3M7 11v10M16 3v18M16 3c3 2 4 5 4 8h-4\"/>",
+  "plate": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><circle cx=\"12\" cy=\"12\" r=\"6\"/><path d=\"M4 4v6M2 4v4a2 2 0 0 0 4 0V4M4 10v10M20 4v16M20 4c-2 2-3 4-3 7h3\"/>",
+  "scale": "<path d=\"M6 4h12l2 3v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7l2-3z\"/><circle cx=\"12\" cy=\"10\" r=\"4\"/><path d=\"m12 10 2-2\"/>",
+  "water": "<path d=\"M12 3s7 8 7 12a7 7 0 0 1-14 0c0-4 7-12 7-12z\"/><path d=\"M9 16a3 3 0 0 0 3 3\"/>",
+  "target": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><circle cx=\"12\" cy=\"12\" r=\"5\"/><circle cx=\"12\" cy=\"12\" r=\"1\"/>",
+  "chart-line": "<path d=\"M3 18 9 12l4 3 8-9M16 6h5v5\"/>",
+  "arrow-down": "<path d=\"M12 3v15M6 12l6 6 6-6M5 21h14\"/>",
+  "arrow-up": "<path d=\"M12 21V6M6 12l6-6 6 6M5 3h14\"/>",
+  "chevron-down": "<path d=\"m6 9 6 6 6-6\"/>",
   "activity": "<path d=\"M3 12h4l3-8 4 16 3-8h4\"/>",
   "aim": "<circle cx=\"12\" cy=\"12\" r=\"8\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2v3M12 19v3M2 12h3M19 12h3\"/>",
   "arrow-left": "<path d=\"M19 12H5M12 19l-7-7 7-7\"/>",

@@ -6,6 +6,8 @@ import {
   timestamp,
   integer,
   jsonb,
+  real,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -21,6 +23,7 @@ export const users = pgTable("users", {
   level: text("level"),
   // Foto de perfil como data URI JPEG pequena (reduzida no app antes do envio)
   avatar: text("avatar"),
+  calorieGoal: integer("calorie_goal").default(2000),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -70,6 +73,41 @@ export const insertUserSchema = createInsertSchema(users).pick({
   googleId: true,
 });
 
+// Refeicoes do medidor de calorias. `day` e a data local do aparelho (YYYY-MM-DD)
+export const meals = pgTable("meals", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id),
+  day: text("day").notNull(),
+  eatenAt: timestamp("eaten_at").notNull(),
+  mealType: text("meal_type").notNull(),
+  name: text("name").notNull(),
+  kcal: integer("kcal").notNull(),
+  photo: text("photo"),
+  items: jsonb("items"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Peso corporal: um registro por usuario por dia
+export const weights = pgTable(
+  "weights",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    day: text("day").notNull(),
+    kg: real("kg").notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (t) => [uniqueIndex("weights_user_day_idx").on(t.userId, t.day)],
+);
+
 export const registerSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),
@@ -90,3 +128,5 @@ export type User = typeof users.$inferSelect;
 export type Equipment = typeof equipment.$inferSelect;
 export type Workout = typeof workouts.$inferSelect;
 export type WorkoutHistory = typeof workoutHistory.$inferSelect;
+export type Meal = typeof meals.$inferSelect;
+export type WeightEntry = typeof weights.$inferSelect;

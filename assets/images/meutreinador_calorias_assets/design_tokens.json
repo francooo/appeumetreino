@@ -1,0 +1,32 @@
+{
+  "palette": {
+    "background.canvas": "#F7F5EF",
+    "surface.primary": "#FFFFFF",
+    "surface.subtle": "#EEECE4",
+    "surface.weight": "#F6FBE5",
+    "text.primary": "#111318",
+    "text.secondary": "#626875",
+    "accent.lime": "#C7F000",
+    "accent.cobalt": "#315FE8",
+    "border.default": "#D9D8D1",
+    "state.danger": "#C93E45"
+  },
+  "typography": {
+    "family": "Inter, Manrope ou sans-serif nativa",
+    "heading": "700-800",
+    "body": "400-600"
+  },
+  "spacingDp": [
+    4,
+    8,
+    12,
+    16,
+    24,
+    32
+  ],
+  "touchTargetDp": [
+    44,
+    48
+  ],
+  "note": "Cores aproximadas; validar contraste e regras do produto."
+}

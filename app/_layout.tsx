@@ -36,6 +36,7 @@ function RootLayoutNav() {
       <Stack.Screen name="vision-result" />
       <Stack.Screen name="add-equipment" />
       <Stack.Screen name="edit-profile" />
+      <Stack.Screen name="meal-entry" />
       <Stack.Screen name="(tabs)" />
     </Stack>
   );

@@ -10,6 +10,7 @@ import {
   type User,
 } from "../shared/schema";
 import { identifyImage, isGroqConfigured } from "./groq";
+import type { MealInput } from "./storage";
 
 // Dados do usuario devolvidos ao app (nunca inclui senha nem googleId)
 function toPublicUser(user: User) {
@@ -19,6 +20,35 @@ function toPublicUser(user: User) {
     email: user.email,
     level: user.level,
     avatar: user.avatar ?? null,
+    calorieGoal: user.calorieGoal ?? 2000,
+  };
+}
+
+const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
+const UUID_RE = /^[0-9a-f-]{36}$/i;
+const MEAL_TYPES = ["breakfast", "lunch", "snack", "dinner"];
+const MAX_MEAL_PHOTO_LENGTH = 200_000; // ~150 KB de miniatura em base64
+
+// Valida o corpo de uma refeicao; devolve a mensagem de erro ou os dados normalizados
+function parseMeal(body: any): { error: string } | { meal: MealInput } {
+  const name = typeof body?.name === "string" ? body.name.trim() : "";
+  const kcal = Number(body?.kcal);
+  if (!DAY_RE.test(String(body?.day))) return { error: "Data invalida" };
+  if (name.length < 1 || name.length > 80) return { error: "Nome invalido" };
+  if (!Number.isInteger(kcal) || kcal < 0 || kcal > 5000) return { error: "Calorias invalidas" };
+  if (!MEAL_TYPES.includes(body?.mealType)) return { error: "Tipo de refeicao invalido" };
+  const eatenAt = new Date(body?.eatenAt);
+  if (Number.isNaN(eatenAt.getTime())) return { error: "Horario invalido" };
+  const photo = body?.photo ?? null;
+  if (photo !== null) {
+    if (typeof photo !== "string" || !photo.startsWith("data:image/jpeg;base64,")) {
+      return { error: "Foto invalida" };
+    }
+    if (photo.length > MAX_MEAL_PHOTO_LENGTH) return { error: "Foto muito grande" };
+  }
+  const items = Array.isArray(body?.items) ? body.items.slice(0, 20) : null;
+  return {
+    meal: { day: body.day, eatenAt, mealType: body.mealType, name, kcal, photo, items },
   };
 }
 
@@ -195,6 +225,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Update user error:", error);
       res.status(500).json({ message: "Erro ao atualizar perfil" });
+    }
+  });
+
+  app.put("/api/user/:id/calorie-goal", async (req: Request, res: Response) => {
+    try {
+      const goal = Number(req.body?.goal);
+      if (!Number.isInteger(goal) || goal < 800 || goal > 6000) {
+        return res.status(400).json({ message: "Meta invalida (800 a 6000 kcal)" });
+      }
+      await storage.updateCalorieGoal(String(req.params.id), goal);
+      res.json({ calorieGoal: goal });
+    } catch (error) {
+      console.error("Update calorie goal error:", error);
+      res.status(500).json({ message: "Erro ao salvar meta" });
+    }
+  });
+
+  app.get("/api/user/:id/meals", async (req: Request, res: Response) => {
+    try {
+      const day = String(req.query.day || "");
+      if (!DAY_RE.test(day)) {
+        return res.status(400).json({ message: "Data invalida" });
+      }
+      res.json(await storage.getMealsByDay(String(req.params.id), day));
+    } catch (error) {
+      console.error("Get meals error:", error);
+      res.status(500).json({ message: "Erro ao buscar refeicoes" });
+    }
+  });
+
+  app.post("/api/user/:id/meals", async (req: Request, res: Response) => {
+    try {
+      const parsed = parseMeal(req.body);
+      if ("error" in parsed) return res.status(400).json({ message: parsed.error });
+      const saved = await storage.addMeal(String(req.params.id), parsed.meal);
+      res.status(201).json(saved);
+    } catch (error) {
+      console.error("Add meal error:", error);
+      res.status(500).json({ message: "Erro ao salvar refeicao" });
+    }
+  });
+
+  app.put("/api/user/:id/meals/:mealId", async (req: Request, res: Response) => {
+    try {
+      const mealId = String(req.params.mealId);
+      if (!UUID_RE.test(mealId)) return res.status(404).json({ message: "Refeicao nao encontrada" });
+      const parsed = parseMeal(req.body);
+      if ("error" in parsed) return res.status(400).json({ message: parsed.error });
+      const saved = await storage.updateMeal(String(req.params.id), mealId, parsed.meal);
+      if (!saved) return res.status(404).json({ message: "Refeicao nao encontrada" });
+      res.json(saved);
+    } catch (error) {
+      console.error("Update meal error:", error);
+      res.status(500).json({ message: "Erro ao atualizar refeicao" });
+    }
+  });
+
+  app.delete("/api/user/:id/meals/:mealId", async (req: Request, res: Response) => {
+    try {
+      const mealId = String(req.params.mealId);
+      if (!UUID_RE.test(mealId)) return res.status(404).json({ message: "Refeicao nao encontrada" });
+      const ok = await storage.deleteMeal(String(req.params.id), mealId);
+      if (!ok) return res.status(404).json({ message: "Refeicao nao encontrada" });
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete meal error:", error);
+      res.status(500).json({ message: "Erro ao excluir refeicao" });
+    }
+  });
+
+  app.get("/api/user/:id/weights", async (req: Request, res: Response) => {
+    try {
+      const from = String(req.query.from || "");
+      const to = String(req.query.to || "");
+      if (!DAY_RE.test(from) || !DAY_RE.test(to)) {
+        return res.status(400).json({ message: "Periodo invalido" });
+      }
+      const userId = String(req.params.id);
+      const [entries, latest] = await Promise.all([
+        storage.getWeights(userId, from, to),
+        storage.getLatestWeight(userId),
+      ]);
+      res.json({ entries, latest: latest ?? null });
+    } catch (error) {
+      console.error("Get weights error:", error);
+      res.status(500).json({ message: "Erro ao buscar peso" });
+    }
+  });
+
+  app.post("/api/user/:id/weights", async (req: Request, res: Response) => {
+    try {
+      const day = String(req.body?.day || "");
+      const kg = Math.round(Number(req.body?.kg) * 10) / 10;
+      if (!DAY_RE.test(day)) return res.status(400).json({ message: "Data invalida" });
+      if (!Number.isFinite(kg) || kg < 20 || kg > 400) {
+        return res.status(400).json({ message: "Peso invalido (20 a 400 kg)" });
+      }
+      res.status(201).json(await storage.saveWeight(String(req.params.id), day, kg));
+    } catch (error) {
+      console.error("Save weight error:", error);
+      res.status(500).json({ message: "Erro ao salvar peso" });
     }
   });
 
@@ -420,6 +551,58 @@ Regras:
         message: "Erro ao processar imagem",
         error: String(error),
       });
+    }
+  });
+
+  app.post("/api/vision/meal", async (req: Request, res: Response) => {
+    try {
+      const { image } = req.body;
+      if (!image || typeof image !== "string") {
+        return res.status(400).json({ message: "Imagem e obrigatoria" });
+      }
+      if (!isGroqConfigured) {
+        return res.status(503).json({ message: "GROQ_API_KEY nao configurada" });
+      }
+      const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+
+      const prompt = `Você é um nutricionista. Analise a foto da refeição e estime as calorias.
+
+Responda EXCLUSIVAMENTE em JSON válido, curto, com esta estrutura:
+{
+  "name": "nome curto da refeição em português (ex: 'Frango grelhado com arroz e salada')",
+  "meal_type": "breakfast" | "lunch" | "snack" | "dinner",
+  "kcal": número inteiro com o total estimado,
+  "items": [{ "name": "alimento", "kcal": número inteiro }],
+  "confidence": número de 0 a 100
+}
+
+Regras:
+- No máximo 6 itens; estime porções pelo tamanho aparente no prato
+- Se a foto não mostrar comida, responda com kcal 0, items vazio e confidence menor que 30
+- Retorne APENAS o JSON, sem markdown ou texto adicional`;
+
+      const responseText = await identifyImage(base64Data, prompt);
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        return res.status(500).json({ message: "Resposta da IA invalida" });
+      }
+      const parsed = JSON.parse(jsonMatch[0]);
+      const items = Array.isArray(parsed.items)
+        ? parsed.items
+            .filter((i: any) => i && typeof i.name === "string")
+            .slice(0, 6)
+            .map((i: any) => ({ name: i.name, kcal: Math.max(0, Math.round(Number(i.kcal) || 0)) }))
+        : [];
+      res.json({
+        name: typeof parsed.name === "string" ? parsed.name : "Refeição",
+        meal_type: MEAL_TYPES.includes(parsed.meal_type) ? parsed.meal_type : null,
+        kcal: Math.max(0, Math.round(Number(parsed.kcal) || 0)),
+        items,
+        confidence: Number(parsed.confidence) || 0,
+      });
+    } catch (error) {
+      console.error("Meal vision error:", error);
+      res.status(500).json({ message: "Erro ao analisar refeicao", error: String(error) });
     }
   });
 

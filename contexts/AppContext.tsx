@@ -36,6 +36,7 @@ interface AppContextValue {
   logout: () => Promise<void>;
   updateAvatar: (avatar: string | null) => Promise<void>;
   updateProfile: (name: string) => Promise<void>;
+  updateCalorieGoal: (goal: number) => Promise<void>;
   setUserLevel: (level: Level) => Promise<void>;
   addUserEquipment: (item: Equipment) => Promise<void>;
   removeUserEquipment: (id: string) => Promise<void>;
@@ -193,6 +194,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUser(updated);
   }, [user]);
 
+  const updateCalorieGoal = useCallback(async (goal: number) => {
+    if (!user?.id) return;
+    await apiRequest("PUT", `/api/user/${user.id}/calorie-goal`, { goal });
+    const updated = { ...user, calorieGoal: goal };
+    await storage.setUser(updated);
+    setUser(updated);
+  }, [user]);
+
   const setUserLevel = useCallback(async (l: Level) => {
     await storage.setLevel(l);
     setLevel(l);
@@ -324,6 +333,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       logout,
       updateAvatar,
       updateProfile,
+      updateCalorieGoal,
       setUserLevel,
       addUserEquipment,
       removeUserEquipment,
@@ -349,6 +359,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       logout,
       updateAvatar,
       updateProfile,
+      updateCalorieGoal,
       setUserLevel,
       addUserEquipment,
       removeUserEquipment,

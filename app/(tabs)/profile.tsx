@@ -12,44 +12,18 @@ import {
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import Svg, { Circle } from "react-native-svg";
 import Colors from "@/constants/colors";
 import Avatar from "@/components/Avatar";
 import Icon, { type IconName } from "@/components/Icon";
 import { useApp } from "@/contexts/AppContext";
 import { useAvatarPicker } from "@/hooks/useAvatarPicker";
+import ProgressRing from "@/components/ui/ProgressRing";
 
 const LEVEL_LABEL: Record<string, string> = {
   beginner: "Nível iniciante",
   intermediate: "Nível intermediário",
   advanced: "Nível avançado",
 };
-
-// Anel de progresso de treinos concluidos
-function ProgressRing({ value, size = 64 }: { value: number; size?: number }) {
-  const stroke = 7;
-  const r = (size - stroke) / 2;
-  const c = 2 * Math.PI * r;
-  return (
-    <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
-      <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
-        <Circle cx={size / 2} cy={size / 2} r={r} stroke={Colors.progressTrack} strokeWidth={stroke} fill="none" />
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          stroke={Colors.secondary}
-          strokeWidth={stroke}
-          fill="none"
-          strokeLinecap="round"
-          strokeDasharray={`${c * value} ${c}`}
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        />
-      </Svg>
-      <Text style={styles.ringText}>{Math.round(value * 100)}%</Text>
-    </View>
-  );
-}
 
 function MenuRow({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
   return (
@@ -308,11 +282,6 @@ const styles = StyleSheet.create({
     width: 1,
     marginVertical: 8,
     backgroundColor: Colors.border,
-  },
-  ringText: {
-    fontFamily: "Rubik_600SemiBold",
-    fontSize: 13,
-    color: Colors.text,
   },
   sectionTitle: {
     fontFamily: "Rubik_800ExtraBold",
