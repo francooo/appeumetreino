@@ -181,6 +181,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/user/:id", async (req: Request, res: Response) => {
+    try {
+      const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+      if (name.length < 1 || name.length > 80) {
+        return res.status(400).json({ message: "Nome invalido" });
+      }
+      const user = await storage.updateUserName(String(req.params.id), name);
+      if (!user) {
+        return res.status(404).json({ message: "Usuario nao encontrado" });
+      }
+      res.json(toPublicUser(user));
+    } catch (error) {
+      console.error("Update user error:", error);
+      res.status(500).json({ message: "Erro ao atualizar perfil" });
+    }
+  });
+
   app.put("/api/user/:id/avatar", async (req: Request, res: Response) => {
     try {
       const { avatar } = req.body as { avatar?: string | null };

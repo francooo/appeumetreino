@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -7,102 +7,73 @@ import {
   Platform,
   Image,
   Alert,
-  Animated,
   ActivityIndicator,
+  ScrollView,
+  Linking,
 } from "react-native";
 import { router } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
+import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
+import Icon, { type IconName } from "@/components/Icon";
 import { apiRequest } from "@/lib/query-client";
 import { useApp } from "@/contexts/AppContext";
+import { PrimaryButton, SecondaryButton } from "@/components/ui/Buttons";
+import { BackButton, Sparks } from "@/components/ui/Layout";
+
+const TIPS: { icon: IconName; color: string; label: string }[] = [
+  { icon: "sun", color: Colors.primaryDark, label: "Boa luz" },
+  { icon: "aim", color: Colors.secondary, label: "Centralizado" },
+  { icon: "gallery", color: Colors.text, label: "Fundo limpo" },
+];
+
+// Cantos verde-lima de enquadramento sobre a camera
+function FrameCorners() {
+  return (
+    <View style={styles.frame} pointerEvents="none">
+      <View style={[styles.corner, styles.cornerTL]} />
+      <View style={[styles.corner, styles.cornerTR]} />
+      <View style={[styles.corner, styles.cornerBL]} />
+      <View style={[styles.corner, styles.cornerBR]} />
+    </View>
+  );
+}
 
 export default function IdentifyEquipmentScreen() {
   const insets = useSafeAreaInsets();
   const { setVisionResult, level } = useApp();
+  const [permission, requestPermission] = useCameraPermissions();
+  const cameraRef = useRef<CameraView>(null);
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (isAnalyzing) {
-      const pulse = Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.1,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      const rotate = Animated.loop(
-        Animated.timing(rotateAnim, {
-          toValue: 1,
-          duration: 2000,
-          useNativeDriver: true,
-        })
-      );
-      pulse.start();
-      rotate.start();
-      return () => {
-        pulse.stop();
-        rotate.stop();
-      };
-    }
-  }, [isAnalyzing]);
-
-  const spin = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
-
-  const convertToBase64Web = async (uri: string): Promise<string> => {
-    const response = await fetch(uri);
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        resolve(result);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  };
-
-  const analyzeImage = async (uri: string, base64Data?: string | null) => {
+  const analyzeImage = async (uri: string) => {
+    setImageUri(uri);
     setIsAnalyzing(true);
     setError(null);
     try {
-      let base64Image: string;
-      if (base64Data) {
-        base64Image = `data:image/jpeg;base64,${base64Data}`;
-      } else if (Platform.OS === "web") {
-        base64Image = await convertToBase64Web(uri);
-      } else {
-        throw new Error("Base64 data not available");
-      }
+      // Reduz a foto antes de enviar: mantem a requisicao bem abaixo do limite da Vercel (4,5 MB)
+      const small = await manipulateAsync(uri, [{ resize: { width: 1024 } }], {
+        compress: 0.7,
+        format: SaveFormat.JPEG,
+        base64: true,
+      });
+      if (!small.base64) throw new Error("Base64 data not available");
+
       const response = await apiRequest("POST", "/api/vision/identify", {
-        image: base64Image,
+        image: `data:image/jpeg;base64,${small.base64}`,
         level,
       });
       const data = await response.json();
 
       if (data.low_confidence) {
         Alert.alert(
-          "Baixa confianca",
-          "Nao conseguimos identificar o equipamento com certeza. Tente tirar outra foto com melhor iluminacao e angulo.",
+          "Baixa confiança",
+          "Não conseguimos identificar o equipamento com certeza. Tente outra foto com melhor iluminação e ângulo.",
           [
             { text: "Tentar novamente", onPress: () => setImageUri(null) },
             {
@@ -112,7 +83,7 @@ export default function IdentifyEquipmentScreen() {
                 router.push("/vision-result");
               },
             },
-          ]
+          ],
         );
       } else {
         if (Platform.OS !== "web") {
@@ -123,7 +94,7 @@ export default function IdentifyEquipmentScreen() {
       }
     } catch (err) {
       console.error("Vision error:", err);
-      setError("Erro ao analisar imagem. Tente novamente.");
+      setError("Erro ao analisar a imagem. Tente novamente.");
       if (Platform.OS !== "web") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
@@ -132,417 +103,354 @@ export default function IdentifyEquipmentScreen() {
     }
   };
 
-  const takePhoto = async () => {
-    const permission = await ImagePicker.getCameraPermissionsAsync();
-    if (!permission.granted) {
-      if (
-        permission.status === "denied" &&
-        !permission.canAskAgain &&
-        Platform.OS !== "web"
-      ) {
-        Alert.alert(
-          "Permissao necessaria",
-          "Precisamos acessar sua camera. Abra as configuracoes para permitir o acesso.",
-          [
-            { text: "Cancelar", style: "cancel" },
-            {
-              text: "Abrir configuracoes",
-              onPress: () => {
-                try {
-                  const { Linking } = require("react-native");
-                  Linking.openSettings();
-                } catch {}
-              },
-            },
-          ]
-        );
-        return;
-      }
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(
-          "Permissao necessaria",
-          "Precisamos acessar sua camera para identificar equipamentos."
-        );
-        return;
-      }
+  const askCameraPermission = async () => {
+    if (permission && !permission.canAskAgain) {
+      Alert.alert(
+        "Permissão necessária",
+        "Precisamos acessar sua câmera. Abra as configurações para permitir o acesso.",
+        [
+          { text: "Cancelar", style: "cancel" },
+          { text: "Abrir configurações", onPress: () => Linking.openSettings() },
+        ],
+      );
+      return;
     }
-    const result = await ImagePicker.launchCameraAsync({
-      quality: 0.8,
-      base64: true,
-    });
-    if (!result.canceled && result.assets[0]) {
-      setImageUri(result.assets[0].uri);
-      analyzeImage(result.assets[0].uri, result.assets[0].base64);
+    await requestPermission();
+  };
+
+  const takePhoto = async () => {
+    if (!permission?.granted) {
+      await askCameraPermission();
+      return;
+    }
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    try {
+      const photo = await cameraRef.current?.takePictureAsync({ quality: 0.8 });
+      if (photo?.uri) {
+        await analyzeImage(photo.uri);
+      }
+    } catch (err) {
+      console.error("Camera error:", err);
+      setError("Não foi possível tirar a foto. Tente novamente.");
     }
   };
 
   const pickImage = async () => {
-    if (Platform.OS !== "web") {
-      const permission = await ImagePicker.getMediaLibraryPermissionsAsync();
-      if (!permission.granted) {
-        if (permission.status === "denied" && !permission.canAskAgain) {
-          Alert.alert(
-            "Permissao necessaria",
-            "Precisamos acessar sua galeria. Abra as configuracoes para permitir o acesso.",
-            [
-              { text: "Cancelar", style: "cancel" },
-              {
-                text: "Abrir configuracoes",
-                onPress: () => {
-                  try {
-                    const { Linking } = require("react-native");
-                    Linking.openSettings();
-                  } catch {}
-                },
-              },
-            ]
-          );
-          return;
-        }
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== "granted") {
-          Alert.alert(
-            "Permissao necessaria",
-            "Precisamos acessar sua galeria para selecionar imagens."
-          );
-          return;
-        }
-      }
+    const lib = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!lib.granted) {
+      Alert.alert("Permissão necessária", "Precisamos acessar sua galeria para selecionar imagens.");
+      return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.8,
-      base64: true,
+      mediaTypes: ["images"],
+      quality: 1,
     });
-    if (!result.canceled && result.assets[0]) {
-      setImageUri(result.assets[0].uri);
-      analyzeImage(result.assets[0].uri, result.assets[0].base64);
+    if (!result.canceled && result.assets[0]?.uri) {
+      await analyzeImage(result.assets[0].uri);
     }
   };
 
-  return (
-    <View
-      style={[
-        styles.container,
-        {
-          paddingTop: Platform.OS === "web" ? 67 : insets.top,
-          paddingBottom: Platform.OS === "web" ? 34 : insets.bottom,
-        },
-      ]}
-    >
-      <View style={styles.header}>
-        <Pressable
-          onPress={() => router.back()}
-          style={styles.backBtn}
-          testID="back-button"
-        >
-          <Ionicons name="arrow-back" size={24} color={Colors.text} />
-        </Pressable>
-        <Text style={styles.headerTitle}>Identificar equipamento</Text>
-        <View style={{ width: 40 }} />
-      </View>
+  const showCamera = permission?.granted && !imageUri;
 
-      {isAnalyzing ? (
-        <View style={styles.analyzingContainer}>
-          <Animated.View
-            style={[styles.analyzingCircle, { transform: [{ scale: pulseAnim }] }]}
-          >
-            <LinearGradient
-              colors={[Colors.primary, Colors.primary]}
-              style={styles.analyzingGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                <Ionicons name="scan" size={48} color={Colors.onPrimary} />
-              </Animated.View>
-            </LinearGradient>
-          </Animated.View>
-          {imageUri && (
-            <Image source={{ uri: imageUri }} style={styles.analyzingPreview} />
+  return (
+    <View style={styles.container}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          {
+            paddingTop: Platform.OS === "web" ? 67 : insets.top + 12,
+            paddingBottom: Platform.OS === "web" ? 34 : insets.bottom + 24,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <BackButton onPress={() => router.back()} shape="square" />
+          <Text style={styles.headerTitle}>Novo equipamento</Text>
+        </View>
+
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>O que você tem por aí?</Text>
+          <Sparks size={44} style={styles.titleSparks} />
+        </View>
+        <Text style={styles.subtitle}>Aponte a câmera para descobrir exercícios compatíveis.</Text>
+
+        {/* Previa: camera ao vivo, foto capturada ou pedido de permissao */}
+        <View style={styles.preview}>
+          {showCamera ? (
+            <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back" />
+          ) : imageUri ? (
+            <Image source={{ uri: imageUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+          ) : (
+            <View style={styles.permissionBox}>
+              <Icon name="camera" size={40} color="#FFFFFF" />
+              <Text style={styles.permissionText}>
+                Permita o acesso à câmera para fotografar seus equipamentos.
+              </Text>
+              <Pressable onPress={askCameraPermission} style={styles.permissionBtn} accessibilityRole="button">
+                <Text style={styles.permissionBtnText}>Permitir câmera</Text>
+              </Pressable>
+            </View>
           )}
-          <Text style={styles.analyzingTitle}>Analisando imagem...</Text>
-          <Text style={styles.analyzingSubtitle}>
-            Identificando equipamentos e sugerindo exercicios
-          </Text>
-          <ActivityIndicator
-            color={Colors.primary}
-            size="small"
-            style={{ marginTop: 16 }}
+
+          {(showCamera || imageUri) && <FrameCorners />}
+
+          {isAnalyzing ? (
+            <View style={styles.analyzing}>
+              <ActivityIndicator size="large" color={Colors.primary} />
+              <Text style={styles.analyzingText}>Analisando com IA...</Text>
+            </View>
+          ) : showCamera ? (
+            <View style={styles.hintPill} pointerEvents="none">
+              <Text style={styles.hintText}>Centralize o equipamento</Text>
+            </View>
+          ) : null}
+        </View>
+
+        {error ? (
+          <View style={styles.errorBox}>
+            <Icon name="info" size={20} color={Colors.error} />
+            <Text style={styles.errorText}>{error}</Text>
+            <Pressable onPress={() => { setError(null); setImageUri(null); }} hitSlop={8}>
+              <Text style={styles.retryText}>Tentar de novo</Text>
+            </Pressable>
+          </View>
+        ) : null}
+
+        <View style={styles.actions}>
+          <PrimaryButton
+            label={imageUri && !isAnalyzing ? "Tirar outra foto" : "Tirar foto"}
+            leadingIcon="camera"
+            trailingIcon={null}
+            onPress={imageUri && !isAnalyzing ? () => setImageUri(null) : takePhoto}
+            disabled={isAnalyzing}
+            testID="take-photo-button"
+          />
+          <SecondaryButton
+            label="Escolher da galeria"
+            icon="gallery"
+            iconColor={Colors.secondary}
+            onPress={pickImage}
+            disabled={isAnalyzing}
           />
         </View>
-      ) : imageUri && !error ? (
-        <View style={styles.previewContainer}>
-          <Image source={{ uri: imageUri }} style={styles.previewImage} />
-        </View>
-      ) : (
-        <View style={styles.captureContainer}>
-          <View style={styles.iconContainer}>
-            <LinearGradient
-              colors={[Colors.limeSoft, Colors.cobaltSoft]}
-              style={styles.iconGradient}
-            >
-              <Ionicons name="scan-outline" size={64} color={Colors.primary} />
-            </LinearGradient>
-          </View>
-          <Text style={styles.captureTitle}>
-            Fotografe seu equipamento
-          </Text>
-          <Text style={styles.captureSubtitle}>
-            A IA vai identificar o equipamento e sugerir os melhores exercicios com mapa muscular
-          </Text>
 
-          {error && (
-            <View style={styles.errorBox}>
-              <Ionicons name="alert-circle" size={18} color={Colors.error} />
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          )}
-
-          <View style={styles.buttonContainer}>
-            <Pressable
-              onPress={takePhoto}
-              style={({ pressed }) => [
-                styles.actionBtn,
-                pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] },
-              ]}
-              testID="take-photo-button"
-            >
-              <LinearGradient
-                colors={[Colors.primary, Colors.primary]}
-                style={styles.actionBtnGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <Ionicons name="camera" size={28} color={Colors.onPrimary} />
-                <Text style={styles.actionBtnText}>Tirar foto</Text>
-              </LinearGradient>
-            </Pressable>
-
-            <Pressable
-              onPress={pickImage}
-              style={({ pressed }) => [
-                styles.actionBtn,
-                pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] },
-              ]}
-              testID="pick-image-button"
-            >
-              <View style={styles.outlineBtnInner}>
-                <Ionicons name="images" size={28} color={Colors.primary} />
-                <Text style={styles.outlineBtnText}>Escolher da galeria</Text>
+        <View style={styles.tips}>
+          {TIPS.map((tip, i) => (
+            <React.Fragment key={tip.label}>
+              {i > 0 && <View style={styles.tipDivider} />}
+              <View style={styles.tip}>
+                <View style={styles.tipIcon}>
+                  <Icon name={tip.icon} size={26} color={tip.color} strokeWidth={2} />
+                </View>
+                <Text style={styles.tipText}>{tip.label}</Text>
               </View>
-            </Pressable>
-          </View>
-
-          <View style={styles.tipsContainer}>
-            <Text style={styles.tipsTitle}>Dicas para melhor resultado</Text>
-            <View style={styles.tipRow}>
-              <Ionicons name="sunny-outline" size={16} color={Colors.textSecondary} />
-              <Text style={styles.tipText}>Boa iluminacao</Text>
-            </View>
-            <View style={styles.tipRow}>
-              <Ionicons name="resize-outline" size={16} color={Colors.textSecondary} />
-              <Text style={styles.tipText}>Equipamento centralizado na foto</Text>
-            </View>
-            <View style={styles.tipRow}>
-              <Ionicons name="eye-outline" size={16} color={Colors.textSecondary} />
-              <Text style={styles.tipText}>Fundo limpo sem muitos objetos</Text>
-            </View>
-          </View>
+            </React.Fragment>
+          ))}
         </View>
-      )}
+
+        <Pressable
+          onPress={() => router.push("/add-equipment")}
+          style={styles.manual}
+          accessibilityRole="link"
+        >
+          <Icon name="list" size={22} color={Colors.text} />
+          <Text style={styles.manualText}>
+            Você também pode{" "}
+            <Text style={styles.manualLink}>adicionar equipamentos manualmente.</Text>
+          </Text>
+          <Icon name="chevron-right" size={20} color={Colors.secondary} strokeWidth={2.2} />
+        </Pressable>
+      </ScrollView>
     </View>
   );
 }
+
+const CORNER = 34;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
   },
+  content: {
+    paddingHorizontal: 20,
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: Colors.card,
-    justifyContent: "center",
-    alignItems: "center",
+    gap: 16,
   },
   headerTitle: {
-    fontFamily: "Rubik_600SemiBold",
-    fontSize: 18,
+    fontFamily: "Rubik_700Bold",
+    fontSize: 22,
     color: Colors.text,
   },
-  captureContainer: {
+  titleRow: {
+    marginTop: 24,
+    paddingRight: 40,
+  },
+  title: {
+    fontFamily: "Rubik_800ExtraBold",
+    fontSize: 32,
+    lineHeight: 38,
+    color: Colors.text,
+  },
+  titleSparks: {
+    position: "absolute",
+    right: 0,
+    top: -10,
+  },
+  subtitle: {
+    fontFamily: "Rubik_400Regular",
+    fontSize: 16,
+    color: Colors.textSecondary,
+    marginTop: 6,
+    marginBottom: 18,
+  },
+  preview: {
+    height: 300,
+    borderRadius: 24,
+    overflow: "hidden",
+    backgroundColor: Colors.heroDark,
+  },
+  frame: {
+    ...StyleSheet.absoluteFillObject,
+    margin: 40,
+  },
+  corner: {
+    position: "absolute",
+    width: CORNER,
+    height: CORNER,
+    borderColor: Colors.primary,
+  },
+  cornerTL: { top: 0, left: 0, borderTopWidth: 5, borderLeftWidth: 5, borderTopLeftRadius: 12 },
+  cornerTR: { top: 0, right: 0, borderTopWidth: 5, borderRightWidth: 5, borderTopRightRadius: 12 },
+  cornerBL: { bottom: 0, left: 0, borderBottomWidth: 5, borderLeftWidth: 5, borderBottomLeftRadius: 12 },
+  cornerBR: { bottom: 0, right: 0, borderBottomWidth: 5, borderRightWidth: 5, borderBottomRightRadius: 12 },
+  hintPill: {
+    position: "absolute",
+    bottom: 18,
+    alignSelf: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 18,
+    backgroundColor: Colors.overlay,
+  },
+  hintText: {
+    fontFamily: "Rubik_500Medium",
+    fontSize: 15,
+    color: "#FFFFFF",
+  },
+  analyzing: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: Colors.overlay,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+  },
+  analyzingText: {
+    fontFamily: "Rubik_600SemiBold",
+    fontSize: 16,
+    color: "#FFFFFF",
+  },
+  permissionBox: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 32,
+    gap: 14,
+    padding: 24,
   },
-  iconContainer: {
-    marginBottom: 24,
-    borderRadius: 40,
-    overflow: "hidden",
-  },
-  iconGradient: {
-    width: 120,
-    height: 120,
-    borderRadius: 40,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  captureTitle: {
-    fontFamily: "Rubik_700Bold",
-    fontSize: 24,
-    color: Colors.text,
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  captureSubtitle: {
+  permissionText: {
     fontFamily: "Rubik_400Regular",
     fontSize: 15,
-    color: Colors.textSecondary,
+    color: "#FFFFFF",
     textAlign: "center",
-    lineHeight: 22,
-    marginBottom: 32,
+  },
+  permissionBtn: {
+    minHeight: 44,
+    paddingHorizontal: 18,
+    borderRadius: 22,
+    backgroundColor: Colors.primary,
+    justifyContent: "center",
+  },
+  permissionBtnText: {
+    fontFamily: "Rubik_600SemiBold",
+    fontSize: 15,
+    color: Colors.onPrimary,
   },
   errorBox: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "rgba(239, 68, 68, 0.1)",
-    borderRadius: 12,
+    marginTop: 12,
     padding: 12,
-    marginBottom: 20,
-    width: "100%",
+    borderRadius: 14,
+    backgroundColor: "#FBE9EA",
   },
   errorText: {
-    fontFamily: "Rubik_500Medium",
+    flex: 1,
+    fontFamily: "Rubik_400Regular",
     fontSize: 14,
     color: Colors.error,
-    flex: 1,
   },
-  buttonContainer: {
-    width: "100%",
-    gap: 12,
-    marginBottom: 32,
-  },
-  actionBtn: {
-    borderRadius: 16,
-    overflow: "hidden",
-  },
-  actionBtnGradient: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    paddingVertical: 16,
-    borderRadius: 16,
-  },
-  actionBtnText: {
-    fontFamily: "Rubik_600SemiBold",
-    fontSize: 16,
-    color: Colors.onPrimary,
-  },
-  outlineBtnInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    paddingVertical: 16,
-    borderWidth: 1.5,
-    borderColor: Colors.primary,
-    borderRadius: 16,
-  },
-  outlineBtnText: {
-    fontFamily: "Rubik_600SemiBold",
-    fontSize: 16,
-    color: Colors.primary,
-  },
-  tipsContainer: {
-    width: "100%",
-    backgroundColor: Colors.card,
-    borderRadius: 16,
-    padding: 16,
-    gap: 10,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  tipsTitle: {
+  retryText: {
     fontFamily: "Rubik_600SemiBold",
     fontSize: 14,
-    color: Colors.text,
-    marginBottom: 4,
+    color: Colors.error,
   },
-  tipRow: {
+  actions: {
+    gap: 12,
+    marginTop: 18,
+  },
+  tips: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    marginTop: 18,
+    paddingVertical: 18,
+    borderRadius: 24,
+    backgroundColor: Colors.backgroundLight,
+  },
+  tip: {
+    flex: 1,
+    alignItems: "center",
+    gap: 10,
+  },
+  tipIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: Colors.background,
+    alignItems: "center",
+    justifyContent: "center",
   },
   tipText: {
-    fontFamily: "Rubik_400Regular",
-    fontSize: 13,
-    color: Colors.textSecondary,
-  },
-  analyzingContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 32,
-  },
-  analyzingCircle: {
-    marginBottom: 24,
-    borderRadius: 50,
-    overflow: "hidden",
-  },
-  analyzingGradient: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  analyzingPreview: {
-    width: 120,
-    height: 120,
-    borderRadius: 16,
-    marginBottom: 24,
-    borderWidth: 2,
-    borderColor: Colors.primary,
-  },
-  analyzingTitle: {
-    fontFamily: "Rubik_700Bold",
-    fontSize: 22,
+    fontFamily: "Rubik_500Medium",
+    fontSize: 14,
     color: Colors.text,
-    textAlign: "center",
   },
-  analyzingSubtitle: {
-    fontFamily: "Rubik_400Regular",
-    fontSize: 15,
-    color: Colors.textSecondary,
-    textAlign: "center",
-    marginTop: 8,
-    lineHeight: 22,
+  tipDivider: {
+    width: 1,
+    height: 60,
+    backgroundColor: Colors.border,
   },
-  previewContainer: {
-    flex: 1,
+  manual: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
+    gap: 10,
+    marginTop: 20,
+    minHeight: 44,
   },
-  previewImage: {
-    width: "100%",
-    height: 300,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: Colors.primary,
+  manualText: {
+    flex: 1,
+    fontFamily: "Rubik_400Regular",
+    fontSize: 14,
+    color: Colors.textSecondary,
+  },
+  manualLink: {
+    fontFamily: "Rubik_600SemiBold",
+    color: Colors.secondary,
   },
 });

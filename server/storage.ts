@@ -20,6 +20,7 @@ export interface IStorage {
   updateUserLevel(userId: string, level: string): Promise<void>;
   linkGoogleId(userId: string, googleId: string): Promise<User>;
   updateUserAvatar(userId: string, avatar: string | null): Promise<void>;
+  updateUserName(userId: string, name: string): Promise<User | undefined>;
   getEquipmentByUser(userId: string): Promise<Equipment[]>;
   addEquipment(userId: string, name: string, imageUri?: string): Promise<Equipment>;
   removeEquipment(id: string, userId: string): Promise<void>;
@@ -73,6 +74,11 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserAvatar(userId: string, avatar: string | null): Promise<void> {
     await db.update(users).set({ avatar }).where(eq(users.id, userId));
+  }
+
+  async updateUserName(userId: string, name: string): Promise<User | undefined> {
+    const [user] = await db.update(users).set({ name }).where(eq(users.id, userId)).returning();
+    return user;
   }
 
   async getEquipmentByUser(userId: string): Promise<Equipment[]> {

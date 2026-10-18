@@ -1,29 +1,39 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  Pressable,
-  Alert,
-  Platform,
-  ScrollView,
-} from "react-native";
+import { View, Text, StyleSheet, Pressable, Alert, Platform, ScrollView } from "react-native";
 import { router } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
+import Svg, { Circle, Path } from "react-native-svg";
 import Colors from "@/constants/colors";
+import Icon from "@/components/Icon";
 import { useApp } from "@/contexts/AppContext";
 import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
+import TextField from "@/components/ui/TextField";
+import { GoogleButton, PrimaryButton } from "@/components/ui/Buttons";
+import { BackButton } from "@/components/ui/Layout";
+
+// Corredor azul com linhas de velocidade verde-lima (ilustracao do mockup de cadastro)
+function RunnerArt() {
+  return (
+    <View style={styles.art} pointerEvents="none">
+      <Svg width={130} height={110} viewBox="0 0 130 110" style={StyleSheet.absoluteFill}>
+        <Circle cx={78} cy={44} r={40} fill={Colors.limeSoft} />
+        <Path d="M30 46 H52" stroke={Colors.primary} strokeWidth={8} strokeLinecap="round" />
+        <Path d="M6 62 H40" stroke={Colors.primary} strokeWidth={8} strokeLinecap="round" />
+        <Path d="M22 78 H48" stroke={Colors.primary} strokeWidth={8} strokeLinecap="round" />
+      </Svg>
+      <View style={styles.runner}>
+        <Icon name="run" size={84} color={Colors.secondary} strokeWidth={2.6} />
+      </View>
+    </View>
+  );
+}
 
 export default function RegisterScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const insets = useSafeAreaInsets();
   const { register } = useApp();
@@ -61,157 +71,94 @@ export default function RegisterScreen() {
     }
   };
 
+  const goToLogin = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(auth)/login");
+    }
+  };
+
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={[
-        styles.contentContainer,
+        styles.content,
         {
-          paddingTop: Platform.OS === "web" ? 67 : insets.top + 20,
-          paddingBottom: Platform.OS === "web" ? 34 : insets.bottom + 20,
+          paddingTop: Platform.OS === "web" ? 67 : insets.top + 12,
+          paddingBottom: Platform.OS === "web" ? 34 : insets.bottom + 24,
         },
       ]}
       keyboardShouldPersistTaps="handled"
     >
+      <BackButton onPress={goToLogin} />
+
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={Colors.text} />
-        </Pressable>
+        <RunnerArt />
         <Text style={styles.title}>Criar conta</Text>
-        <Text style={styles.subtitle}>
-          Comece sua jornada de treino personalizado
-        </Text>
+        <Text style={styles.subtitle}>Comece sua jornada de treino personalizado</Text>
       </View>
 
       <View style={styles.form}>
-        <View style={styles.inputContainer}>
-          <Ionicons
-            name="person-outline"
-            size={20}
-            color={Colors.textMuted}
-            style={styles.inputIcon}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Nome"
-            placeholderTextColor={Colors.textMuted}
-            value={name}
-            onChangeText={setName}
-            autoCapitalize="words"
-          />
-        </View>
-
-        <View style={styles.inputContainer}>
-          <Ionicons
-            name="mail-outline"
-            size={20}
-            color={Colors.textMuted}
-            style={styles.inputIcon}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor={Colors.textMuted}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-        </View>
-
-        <View style={styles.inputContainer}>
-          <Ionicons
-            name="lock-closed-outline"
-            size={20}
-            color={Colors.textMuted}
-            style={styles.inputIcon}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Senha"
-            placeholderTextColor={Colors.textMuted}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
-          />
-          <Pressable
-            onPress={() => setShowPassword(!showPassword)}
-            style={styles.eyeButton}
-          >
-            <Ionicons
-              name={showPassword ? "eye-off-outline" : "eye-outline"}
-              size={20}
-              color={Colors.textMuted}
-            />
-          </Pressable>
-        </View>
-
-        <View style={styles.inputContainer}>
-          <Ionicons
-            name="shield-checkmark-outline"
-            size={20}
-            color={Colors.textMuted}
-            style={styles.inputIcon}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Confirmar senha"
-            placeholderTextColor={Colors.textMuted}
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry={!showPassword}
-          />
-        </View>
-
-        <Pressable
-          onPress={handleRegister}
-          disabled={isSubmitting}
-          style={({ pressed }) => [
-            styles.registerButton,
-            pressed && styles.buttonPressed,
-            isSubmitting && styles.buttonDisabled,
-          ]}
-        >
-          <LinearGradient
-            colors={[Colors.primary, Colors.primary]}
-            style={styles.registerGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            <Text style={styles.registerText}>
-              {isSubmitting ? "Criando..." : "Criar conta"}
-            </Text>
-          </LinearGradient>
-        </Pressable>
-
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>ou</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        <Pressable
-          onPress={signInWithGoogle}
-          disabled={isGoogleLoading}
-          style={({ pressed }) => [
-            styles.googleButton,
-            pressed && styles.buttonPressed,
-            isGoogleLoading && styles.buttonDisabled,
-          ]}
-          accessibilityRole="button"
-        >
-          <Ionicons name="logo-google" size={20} color={Colors.text} />
-          <Text style={styles.googleText}>
-            {isGoogleLoading ? "Cadastrando..." : "Cadastro com Google"}
-          </Text>
-        </Pressable>
+        <TextField
+          icon="user"
+          label="Nome"
+          placeholder="Digite seu nome"
+          value={name}
+          onChangeText={setName}
+          autoCapitalize="words"
+          autoComplete="name"
+        />
+        <TextField
+          icon="email"
+          label="Email"
+          placeholder="seu@email.com"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="email"
+        />
+        <TextField
+          icon="lock"
+          label="Senha"
+          placeholder="Digite sua senha"
+          value={password}
+          onChangeText={setPassword}
+          secure
+          autoComplete="new-password"
+        />
+        <TextField
+          icon="shield-check"
+          label="Confirmar senha"
+          placeholder="Digite sua senha novamente"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry
+          autoComplete="new-password"
+        />
       </View>
 
+      <PrimaryButton
+        label="Criar conta"
+        onPress={handleRegister}
+        loading={isSubmitting}
+        style={styles.cta}
+      />
+
+      <View style={styles.divider}>
+        <View style={styles.dividerLine} />
+        <Text style={styles.dividerText}>ou</Text>
+        <View style={styles.dividerLine} />
+      </View>
+
+      <GoogleButton label="Cadastro com Google" onPress={signInWithGoogle} loading={isGoogleLoading} />
+
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Ja tem uma conta?</Text>
-        <Pressable onPress={() => router.back()}>
-          <Text style={styles.footerLink}>Entrar</Text>
+        <Text style={styles.footerText}>Já tem uma conta?</Text>
+        <Pressable onPress={goToLogin} hitSlop={8} accessibilityRole="link">
+          <Text style={styles.link}>Entrar</Text>
         </Pressable>
       </View>
     </ScrollView>
@@ -223,81 +170,50 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  contentContainer: {
+  content: {
     flexGrow: 1,
     paddingHorizontal: 24,
   },
   header: {
+    marginTop: 16,
+    marginBottom: 28,
     gap: 8,
-    marginBottom: 32,
   },
-  backBtn: {
-    width: 44,
-    height: 44,
-    justifyContent: "center",
-    marginBottom: 8,
+  art: {
+    position: "absolute",
+    right: -8,
+    top: -40,
+    width: 130,
+    height: 110,
+  },
+  runner: {
+    position: "absolute",
+    right: 4,
+    top: 4,
   },
   title: {
-    fontSize: 30,
-    fontFamily: "Rubik_700Bold",
+    fontFamily: "Rubik_800ExtraBold",
+    fontSize: 38,
+    lineHeight: 44,
     color: Colors.text,
+    marginTop: 24,
   },
   subtitle: {
-    fontSize: 15,
     fontFamily: "Rubik_400Regular",
+    fontSize: 17,
     color: Colors.textSecondary,
   },
   form: {
-    gap: 16,
+    gap: 14,
   },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.inputBg,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: Colors.inputBorder,
-    paddingHorizontal: 16,
-  },
-  inputIcon: {
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 16,
-    fontFamily: "Rubik_400Regular",
-    fontSize: 16,
-    color: Colors.text,
-  },
-  eyeButton: {
-    padding: 4,
-  },
-  registerButton: {
-    borderRadius: 14,
-    overflow: "hidden",
-    marginTop: 8,
-  },
-  registerGradient: {
-    paddingVertical: 16,
-    alignItems: "center",
-  },
-  registerText: {
-    fontFamily: "Rubik_600SemiBold",
-    fontSize: 17,
-    color: Colors.onPrimary,
-  },
-  buttonPressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }],
-  },
-  buttonDisabled: {
-    opacity: 0.6,
+  cta: {
+    marginTop: 24,
   },
   divider: {
     flexDirection: "row",
     alignItems: "center",
     gap: 16,
-    marginVertical: 8,
+    marginVertical: 22,
   },
   dividerLine: {
     flex: 1,
@@ -306,24 +222,8 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     fontFamily: "Rubik_400Regular",
-    fontSize: 14,
-    color: Colors.textMuted,
-  },
-  googleButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-    paddingVertical: 16,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.card,
-  },
-  googleText: {
-    fontFamily: "Rubik_500Medium",
-    fontSize: 16,
-    color: Colors.text,
+    fontSize: 15,
+    color: Colors.textSecondary,
   },
   footer: {
     flexDirection: "row",
@@ -331,16 +231,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     marginTop: "auto",
-    paddingTop: 32,
+    paddingTop: 28,
   },
   footerText: {
     fontFamily: "Rubik_400Regular",
     fontSize: 15,
     color: Colors.textSecondary,
   },
-  footerLink: {
+  link: {
     fontFamily: "Rubik_600SemiBold",
-    fontSize: 15,
-    color: Colors.primary,
+    fontSize: 16,
+    color: Colors.secondary,
   },
 });

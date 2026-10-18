@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -10,93 +10,68 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import * as ImagePicker from "expo-image-picker";
-import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
+import Svg, { Circle } from "react-native-svg";
 import Colors from "@/constants/colors";
 import Avatar from "@/components/Avatar";
-import Icon from "@/components/Icon";
+import Icon, { type IconName } from "@/components/Icon";
 import { useApp } from "@/contexts/AppContext";
+import { useAvatarPicker } from "@/hooks/useAvatarPicker";
+
+const LEVEL_LABEL: Record<string, string> = {
+  beginner: "Nível iniciante",
+  intermediate: "Nível intermediário",
+  advanced: "Nível avançado",
+};
+
+// Anel de progresso de treinos concluidos
+function ProgressRing({ value, size = 64 }: { value: number; size?: number }) {
+  const stroke = 7;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  return (
+    <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
+      <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
+        <Circle cx={size / 2} cy={size / 2} r={r} stroke={Colors.progressTrack} strokeWidth={stroke} fill="none" />
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          stroke={Colors.secondary}
+          strokeWidth={stroke}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={`${c * value} ${c}`}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </Svg>
+      <Text style={styles.ringText}>{Math.round(value * 100)}%</Text>
+    </View>
+  );
+}
+
+function MenuRow({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.menuRow, pressed && { opacity: 0.6 }]}
+      accessibilityRole="button"
+    >
+      <Icon name={icon} size={28} color={Colors.text} />
+      <Text style={styles.menuLabel}>{label}</Text>
+      <Icon name="chevron-right" size={22} color={Colors.textSecondary} />
+    </Pressable>
+  );
+}
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
-  const { user, level, equipment, workouts, history, logout, updateAvatar } = useApp();
-  const [isSavingAvatar, setIsSavingAvatar] = useState(false);
+  const { user, level, equipment, workouts, history, logout } = useApp();
+  const { handleAvatarPress, isSavingAvatar } = useAvatarPicker();
 
-  const saveAvatar = async (uri: string) => {
-    setIsSavingAvatar(true);
-    try {
-      // Reduz para 400x400 JPEG (~30-60 KB) antes de enviar e salvar no banco
-      const result = await manipulateAsync(uri, [{ resize: { width: 400, height: 400 } }], {
-        compress: 0.7,
-        format: SaveFormat.JPEG,
-        base64: true,
-      });
-      if (!result.base64) throw new Error("Falha ao processar a imagem");
-      await updateAvatar(`data:image/jpeg;base64,${result.base64}`);
-    } catch (e) {
-      console.error("Avatar error:", e);
-      Alert.alert("Erro", "Nao foi possivel salvar a foto. Tente novamente.");
-    } finally {
-      setIsSavingAvatar(false);
-    }
-  };
-
-  const pickAvatar = async (source: "camera" | "library") => {
-    const permission =
-      source === "camera"
-        ? await ImagePicker.requestCameraPermissionsAsync()
-        : await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert(
-        "Permissao necessaria",
-        source === "camera"
-          ? "Permita o acesso a camera para tirar a foto."
-          : "Permita o acesso as fotos para escolher uma imagem.",
-      );
-      return;
-    }
-    const options: ImagePicker.ImagePickerOptions = {
-      mediaTypes: ["images"],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    };
-    const result =
-      source === "camera"
-        ? await ImagePicker.launchCameraAsync(options)
-        : await ImagePicker.launchImageLibraryAsync(options);
-    if (!result.canceled && result.assets[0]?.uri) {
-      await saveAvatar(result.assets[0].uri);
-    }
-  };
-
-  const handleAvatarPress = () => {
-    const buttons: { text: string; style?: "cancel" | "destructive"; onPress?: () => void }[] = [
-      { text: "Tirar foto", onPress: () => pickAvatar("camera") },
-      { text: "Escolher da galeria", onPress: () => pickAvatar("library") },
-    ];
-    if (user?.avatar) {
-      buttons.push({
-        text: "Remover foto",
-        style: "destructive",
-        onPress: async () => {
-          setIsSavingAvatar(true);
-          try {
-            await updateAvatar(null);
-          } catch {
-            Alert.alert("Erro", "Nao foi possivel remover a foto.");
-          } finally {
-            setIsSavingAvatar(false);
-          }
-        },
-      });
-    }
-    buttons.push({ text: "Cancelar", style: "cancel" });
-    Alert.alert("Foto de perfil", undefined, buttons);
-  };
+  const total = Math.max(workouts.length, history.length);
+  const completedRatio = total > 0 ? Math.min(history.length / total, 1) : 0;
 
   const handleLogout = () => {
     Alert.alert("Sair", "Deseja realmente sair?", [
@@ -119,20 +94,11 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const levelLabel =
-    level === "beginner"
-      ? "Iniciante"
-      : level === "intermediate"
-        ? "Intermediario"
-        : level === "advanced"
-          ? "Avancado"
-          : "Nao definido";
-
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={[
-        styles.scrollContent,
+        styles.content,
         {
           paddingTop: Platform.OS === "web" ? 67 : insets.top + 16,
           paddingBottom: Platform.OS === "web" ? 34 + 80 : insets.bottom + 100,
@@ -142,20 +108,15 @@ export default function ProfileScreen() {
     >
       <Text style={styles.title}>Perfil</Text>
 
-      <View style={styles.profileCard}>
+      <View style={styles.identity}>
         <Pressable
           onPress={handleAvatarPress}
           disabled={isSavingAvatar}
-          style={({ pressed }) => [styles.profileAvatar, pressed && { opacity: 0.8 }]}
+          style={({ pressed }) => [pressed && { opacity: 0.85 }]}
           accessibilityRole="button"
           accessibilityLabel="Alterar foto de perfil"
         >
-          <Avatar
-            user={user}
-            size={96}
-            backgroundColor={Colors.primary}
-            textColor={Colors.onPrimary}
-          />
+          <Avatar user={user} size={112} />
           {isSavingAvatar && (
             <View style={styles.avatarLoading}>
               <ActivityIndicator color="#FFFFFF" />
@@ -165,69 +126,68 @@ export default function ProfileScreen() {
             <Icon name="camera" size={16} color={Colors.onPrimary} strokeWidth={2.2} />
           </View>
         </Pressable>
-        <Text style={styles.profileName}>{user?.name || "Atleta"}</Text>
-        <Text style={styles.profileEmail}>{user?.email || ""}</Text>
-        <View style={styles.levelChip}>
-          <Text style={styles.levelChipText}>{levelLabel}</Text>
+
+        <View style={styles.identityText}>
+          <Text style={styles.name} numberOfLines={2}>
+            {user?.name || "Atleta"}
+          </Text>
+          <View style={styles.levelChip}>
+            <Icon name="bars" size={18} color={Colors.text} strokeWidth={2.4} />
+            <Text style={styles.levelText}>{LEVEL_LABEL[level || ""] || "Nível não definido"}</Text>
+          </View>
+          <Pressable
+            onPress={() => router.push("/edit-profile")}
+            style={styles.editLink}
+            hitSlop={8}
+            accessibilityRole="link"
+          >
+            <Icon name="edit" size={20} color={Colors.secondary} />
+            <Text style={styles.editText}>Editar perfil</Text>
+          </Pressable>
         </View>
       </View>
 
-      <View style={styles.statsRow}>
-        <View style={styles.statItem}>
+      <View style={styles.stats}>
+        <View style={styles.stat}>
           <Text style={styles.statValue}>{workouts.length}</Text>
           <Text style={styles.statLabel}>Treinos</Text>
+          <Icon name="run" size={34} color={Colors.success} strokeWidth={2.4} />
         </View>
         <View style={styles.statDivider} />
-        <View style={styles.statItem}>
+        <View style={styles.stat}>
           <Text style={styles.statValue}>{history.length}</Text>
-          <Text style={styles.statLabel}>Completos</Text>
+          <Text style={styles.statLabel}>Concluídos</Text>
+          <ProgressRing value={completedRatio} />
         </View>
         <View style={styles.statDivider} />
-        <View style={styles.statItem}>
+        <View style={styles.stat}>
           <Text style={styles.statValue}>{equipment.length}</Text>
           <Text style={styles.statLabel}>Equipamentos</Text>
+          <Icon name="dumbbell" size={34} color={Colors.secondary} strokeWidth={2.6} />
         </View>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Equipamentos cadastrados</Text>
-        {equipment.length > 0 ? (
-          <View style={styles.equipmentList}>
-            {equipment.map((item) => (
-              <View key={item.id} style={styles.equipmentChip}>
-                <Ionicons name="fitness" size={14} color={Colors.primary} />
-                <Text style={styles.equipmentChipText}>{item.name}</Text>
-              </View>
-            ))}
-          </View>
-        ) : (
-          <Text style={styles.emptyText}>Nenhum equipamento cadastrado</Text>
-        )}
-      </View>
-
-      <View style={styles.menuSection}>
-        <MenuItem
-          icon="person-outline"
-          label="Editar perfil"
-          onPress={() => {}}
+      <Text style={styles.sectionTitle}>Sua conta</Text>
+      <View>
+        <MenuRow icon="user" label="Dados pessoais" onPress={() => router.push("/edit-profile")} />
+        <MenuRow
+          icon="activity"
+          label="Meu nível de treino"
+          onPress={() => router.push({ pathname: "/level-select", params: { from: "profile" } })}
         />
-        <MenuItem
-          icon="fitness-outline"
-          label="Alterar nivel"
-          onPress={() => router.push("/level-select")}
+        <MenuRow icon="dumbbell" label="Equipamentos" onPress={() => router.push("/add-equipment")} />
+        <MenuRow
+          icon="bell"
+          label="Preferências e notificações"
+          onPress={() => Alert.alert("Em breve", "Preferências e notificações estarão disponíveis em breve.")}
         />
-        <MenuItem
-          icon="barbell-outline"
-          label="Gerenciar equipamentos"
-          onPress={() => router.push("/add-equipment")}
-        />
-        <MenuItem
-          icon="information-circle-outline"
-          label="Sobre o app"
+        <MenuRow
+          icon="info"
+          label="Ajuda e sobre o app"
           onPress={() =>
             Alert.alert(
               "Eu me treino",
-              "Versao 1.0.0\nSeu treino personalizado com o que voce tem em casa.",
+              "Versão 1.1.0\nSeu treino personalizado com o que você tem em casa.",
             )
           }
         />
@@ -235,39 +195,13 @@ export default function ProfileScreen() {
 
       <Pressable
         onPress={handleLogout}
-        style={({ pressed }) => [
-          styles.logoutBtn,
-          pressed && styles.logoutBtnPressed,
-        ]}
+        style={({ pressed }) => [styles.logout, pressed && { opacity: 0.7 }]}
+        accessibilityRole="button"
       >
-        <Ionicons name="log-out-outline" size={20} color={Colors.error} />
-        <Text style={styles.logoutText}>Sair</Text>
+        <Icon name="logout" size={26} color={Colors.error} strokeWidth={2} />
+        <Text style={styles.logoutText}>Sair da conta</Text>
       </Pressable>
     </ScrollView>
-  );
-}
-
-function MenuItem({
-  icon,
-  label,
-  onPress,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.menuItem,
-        pressed && styles.menuItemPressed,
-      ]}
-    >
-      <Ionicons name={icon} size={20} color={Colors.textSecondary} />
-      <Text style={styles.menuItemLabel}>{label}</Text>
-      <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
-    </Pressable>
   );
 }
 
@@ -276,170 +210,145 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  scrollContent: {
-    paddingHorizontal: 24,
+  content: {
+    paddingHorizontal: 20,
   },
   title: {
-    fontFamily: "Rubik_700Bold",
-    fontSize: 28,
+    fontFamily: "Rubik_800ExtraBold",
+    fontSize: 40,
     color: Colors.text,
-    marginBottom: 24,
+    marginBottom: 20,
   },
-  profileCard: {
+  identity: {
+    flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    marginBottom: 24,
-  },
-  profileAvatar: {
-    width: 96,
-    height: 96,
-    marginBottom: 4,
+    gap: 18,
   },
   avatarLoading: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 48,
+    borderRadius: 56,
     backgroundColor: "rgba(17,19,24,0.45)",
     alignItems: "center",
     justifyContent: "center",
   },
   avatarBadge: {
     position: "absolute",
-    right: -2,
-    bottom: -2,
+    right: 0,
+    bottom: 2,
     width: 34,
     height: 34,
     borderRadius: 17,
     backgroundColor: Colors.primary,
     borderWidth: 3,
-    borderColor: Colors.card,
+    borderColor: Colors.background,
     alignItems: "center",
     justifyContent: "center",
   },
-  profileName: {
-    fontFamily: "Rubik_700Bold",
-    fontSize: 22,
+  identityText: {
+    flex: 1,
+    gap: 8,
+  },
+  name: {
+    fontFamily: "Rubik_800ExtraBold",
+    fontSize: 28,
     color: Colors.text,
   },
-  profileEmail: {
-    fontFamily: "Rubik_400Regular",
-    fontSize: 14,
-    color: Colors.textSecondary,
-  },
   levelChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: Colors.limeSoft,
-    marginTop: 4,
-  },
-  levelChipText: {
-    fontFamily: "Rubik_500Medium",
-    fontSize: 13,
-    color: Colors.primary,
-  },
-  statsRow: {
     flexDirection: "row",
-    backgroundColor: Colors.card,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 18,
+    backgroundColor: Colors.primaryLight,
+  },
+  levelText: {
+    fontFamily: "Rubik_500Medium",
+    fontSize: 15,
+    color: Colors.text,
+  },
+  editLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    minHeight: 32,
+  },
+  editText: {
+    fontFamily: "Rubik_500Medium",
+    fontSize: 16,
+    color: Colors.secondary,
+  },
+  stats: {
+    flexDirection: "row",
+    marginTop: 24,
+    paddingVertical: 18,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: Colors.border,
-    justifyContent: "space-around",
-    alignItems: "center",
+    backgroundColor: Colors.card,
   },
-  statItem: {
+  stat: {
+    flex: 1,
     alignItems: "center",
     gap: 4,
   },
   statValue: {
-    fontFamily: "Rubik_700Bold",
-    fontSize: 22,
+    fontFamily: "Rubik_800ExtraBold",
+    fontSize: 34,
     color: Colors.text,
   },
   statLabel: {
     fontFamily: "Rubik_400Regular",
-    fontSize: 12,
+    fontSize: 14,
     color: Colors.textSecondary,
+    marginBottom: 6,
   },
   statDivider: {
     width: 1,
-    height: 32,
+    marginVertical: 8,
     backgroundColor: Colors.border,
   },
-  section: {
-    marginBottom: 24,
-    gap: 12,
-  },
-  sectionTitle: {
+  ringText: {
     fontFamily: "Rubik_600SemiBold",
-    fontSize: 16,
-    color: Colors.text,
-  },
-  equipmentList: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  equipmentChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  equipmentChipText: {
-    fontFamily: "Rubik_400Regular",
     fontSize: 13,
     color: Colors.text,
   },
-  emptyText: {
-    fontFamily: "Rubik_400Regular",
-    fontSize: 14,
-    color: Colors.textMuted,
+  sectionTitle: {
+    fontFamily: "Rubik_800ExtraBold",
+    fontSize: 28,
+    color: Colors.text,
+    marginTop: 28,
+    marginBottom: 8,
   },
-  menuSection: {
-    marginBottom: 24,
-    gap: 2,
-  },
-  menuItem: {
+  menuRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
-    paddingVertical: 16,
+    gap: 18,
+    minHeight: 64,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
-  menuItemPressed: {
-    opacity: 0.7,
-  },
-  menuItemLabel: {
+  menuLabel: {
     flex: 1,
     fontFamily: "Rubik_400Regular",
-    fontSize: 16,
+    fontSize: 17,
     color: Colors.text,
   },
-  logoutBtn: {
+  logout: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    paddingVertical: 16,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: Colors.error,
-    backgroundColor: "rgba(239, 68, 68, 0.08)",
-  },
-  logoutBtnPressed: {
-    opacity: 0.8,
+    gap: 12,
+    minHeight: 60,
+    marginTop: 20,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: Colors.border,
   },
   logoutText: {
-    fontFamily: "Rubik_600SemiBold",
-    fontSize: 16,
+    fontFamily: "Rubik_700Bold",
+    fontSize: 17,
     color: Colors.error,
   },
 });

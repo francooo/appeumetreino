@@ -35,6 +35,7 @@ interface AppContextValue {
   loginWithGoogle: (idToken: string) => Promise<UserData>;
   logout: () => Promise<void>;
   updateAvatar: (avatar: string | null) => Promise<void>;
+  updateProfile: (name: string) => Promise<void>;
   setUserLevel: (level: Level) => Promise<void>;
   addUserEquipment: (item: Equipment) => Promise<void>;
   removeUserEquipment: (id: string) => Promise<void>;
@@ -184,6 +185,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUser(updated);
   }, [user]);
 
+  const updateProfile = useCallback(async (name: string) => {
+    if (!user?.id) return;
+    await apiRequest("PUT", `/api/user/${user.id}`, { name });
+    const updated = { ...user, name };
+    await storage.setUser(updated);
+    setUser(updated);
+  }, [user]);
+
   const setUserLevel = useCallback(async (l: Level) => {
     await storage.setLevel(l);
     setLevel(l);
@@ -314,6 +323,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       loginWithGoogle,
       logout,
       updateAvatar,
+      updateProfile,
       setUserLevel,
       addUserEquipment,
       removeUserEquipment,
@@ -338,6 +348,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       loginWithGoogle,
       logout,
       updateAvatar,
+      updateProfile,
       setUserLevel,
       addUserEquipment,
       removeUserEquipment,

@@ -142,10 +142,10 @@ export default function HomeScreen() {
     });
   };
 
-  const handleExerciseDetail = (exercise: Exercise) => {
+  const handleExerciseDetail = (exercise: Exercise, index: number) => {
     router.push({
       pathname: "/exercise-detail",
-      params: { exercise: JSON.stringify(exercise) },
+      params: { exercise: JSON.stringify(exercise), index: String(index) },
     });
   };
 
@@ -393,7 +393,7 @@ export default function HomeScreen() {
             return (
               <Pressable
                 key={idx}
-                onPress={() => handleExerciseDetail(ex)}
+                onPress={() => handleExerciseDetail(ex, idx)}
                 style={({ pressed }) => [styles.exerciseRow, pressed && styles.pressed]}
                 accessibilityRole="button"
                 accessibilityLabel={`${ex.name}, ${ex.sets} séries de ${ex.reps}`}

@@ -35,6 +35,7 @@ function RootLayoutNav() {
       <Stack.Screen name="identify-equipment" />
       <Stack.Screen name="vision-result" />
       <Stack.Screen name="add-equipment" />
+      <Stack.Screen name="edit-profile" />
       <Stack.Screen name="(tabs)" />
     </Stack>
   );

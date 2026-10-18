@@ -1,69 +1,110 @@
-import React, { useState, useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  Pressable,
-  Dimensions,
   FlatList,
+  Pressable,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import { router } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
+import Svg, { Path } from "react-native-svg";
 import Colors from "@/constants/colors";
+import Icon from "@/components/Icon";
 import { useApp } from "@/contexts/AppContext";
+import { PrimaryButton } from "@/components/ui/Buttons";
+import { Blob, Sparks, Stripes } from "@/components/ui/Layout";
 
-const { width } = Dimensions.get("window");
+type SlideId = "equipment" | "level" | "custom";
 
 interface Slide {
-  id: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  id: SlideId;
   title: string;
   description: string;
-  gradient: [string, string];
+  showBrand: boolean;
 }
 
 const slides: Slide[] = [
   {
-    id: "1",
-    icon: "camera",
-    title: "Tire fotos dos seus\nequipamentos",
+    id: "equipment",
+    title: "Tire fotos dos seus equipamentos",
     description:
-      "Fotografe os aparelhos de exercicio que voce tem em casa. Nos identificamos e criamos treinos sob medida.",
-    gradient: ["#557000", "#7A9A00"],
+      "Fotografe os aparelhos de exercício que você tem em casa. Nós identificamos e criamos treinos sob medida.",
+    showBrand: true,
   },
   {
-    id: "2",
-    icon: "trending-up",
-    title: "Informe seu nivel\nde experiencia",
+    id: "level",
+    title: "Informe seu nível de experiência",
     description:
-      "Selecione se voce e iniciante, intermediario ou avancado. O treino sera adaptado ao seu nivel.",
-    gradient: [Colors.secondary, "#0097A7"],
+      "Selecione se você é iniciante, intermediário ou avançado. O treino será adaptado ao seu nível.",
+    showBrand: false,
   },
   {
-    id: "3",
-    icon: "flash",
-    title: "Receba treinos\npersonalizados",
+    id: "custom",
+    title: "Receba treinos personalizados",
     description:
-      "Geramos automaticamente um plano de treino completo, com series, repeticoes e equipamentos.",
-    gradient: ["#7C4DFF", "#536DFE"],
+      "Geramos automaticamente um plano de treino completo, com séries, repetições e equipamentos.",
+    showBrand: true,
   },
 ];
+
+function SlideArt({ id }: { id: SlideId }) {
+  if (id === "equipment") {
+    return (
+      <View style={styles.artWrap}>
+        <Svg width={230} height={220} viewBox="0 0 230 220">
+          <Path
+            d="M120 8 C185 10 225 60 222 120 C219 180 170 214 110 212 C50 210 8 176 8 112 C8 50 55 6 120 8 Z"
+            fill={Colors.primary}
+          />
+        </Svg>
+        <View style={styles.artIcon}>
+          <Icon name="dumbbell" size={120} color={Colors.text} strokeWidth={2.4} />
+        </View>
+        <Sparks style={styles.sparkTopRight} size={80} />
+        <Sparks style={styles.sparkBottomLeft} size={56} color={Colors.secondary} flip />
+      </View>
+    );
+  }
+  if (id === "level") {
+    return (
+      <View style={styles.artWrap}>
+        <View style={[styles.artSquare, { backgroundColor: Colors.limeSoft }]}>
+          <Icon name="trend-up" size={96} color={Colors.secondary} strokeWidth={2.6} />
+        </View>
+        <Sparks style={styles.sparkTopRight} size={80} />
+      </View>
+    );
+  }
+  return (
+    <View style={styles.artWrap}>
+      <View style={[styles.artSquare, { backgroundColor: Colors.cobaltSoft }]}>
+        <Icon name="bolt" size={96} color={Colors.secondary} strokeWidth={2.6} />
+      </View>
+      <Sparks style={styles.sparkLeft} size={64} flip />
+      <Sparks style={styles.sparkRight} size={64} />
+    </View>
+  );
+}
 
 export default function OnboardingScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const { setOnboarded } = useApp();
+
+  const isLast = currentIndex === slides.length - 1;
+  const current = slides[currentIndex];
 
   const handleNext = async () => {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    if (currentIndex < slides.length - 1) {
+    if (!isLast) {
       flatListRef.current?.scrollToIndex({ index: currentIndex + 1 });
       setCurrentIndex(currentIndex + 1);
     } else {
@@ -77,98 +118,77 @@ export default function OnboardingScreen() {
     router.replace("/(auth)/login");
   };
 
-  const renderSlide = ({ item }: { item: Slide }) => (
-    <View style={[styles.slide, { width }]}>
-      <View style={styles.slideContent}>
-        <View style={styles.iconContainer}>
-          <LinearGradient
-            colors={item.gradient}
-            style={styles.iconGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <Ionicons name={item.icon} size={48} color="#FFFFFF" />
-          </LinearGradient>
-        </View>
-        <Text style={styles.slideTitle}>{item.title}</Text>
-        <Text style={styles.slideDescription}>{item.description}</Text>
-      </View>
-    </View>
-  );
-
   return (
-    <View style={[styles.container, { backgroundColor: Colors.background }]}>
+    <View style={styles.container}>
+      {/* Decoracao de fundo de cada slide */}
+      {current.id === "level" && (
+        <>
+          <Blob
+            color={Colors.primary}
+            lineColor={Colors.secondary}
+            style={[styles.blobTopLeft, { transform: [{ rotate: "180deg" }] }]}
+          />
+          <Blob color={Colors.secondary} lineColor={Colors.primary} style={styles.blobBottomRight} />
+        </>
+      )}
+      {current.id === "custom" && (
+        <>
+          <Stripes style={styles.stripesTopLeft} />
+          <Stripes style={styles.stripesBottomRight} />
+        </>
+      )}
+
       <View
-        style={[
-          styles.header,
-          { paddingTop: Platform.OS === "web" ? 67 : insets.top + 16 },
-        ]}
+        style={[styles.header, { paddingTop: Platform.OS === "web" ? 67 : insets.top + 16 }]}
       >
-        {currentIndex < slides.length - 1 ? (
-          <Pressable onPress={handleSkip} style={styles.skipBtn}>
-            <Text style={styles.skipText}>Pular</Text>
-          </Pressable>
+        {current.showBrand ? (
+          <View style={styles.brand}>
+            <Icon name="dumbbell" size={44} color={Colors.primary} strokeWidth={3.4} />
+            <Text style={styles.brandName}>{"Eu me\ntreino"}</Text>
+            <View style={styles.brandDivider} />
+            <Text style={styles.brandTagline}>{"DISCIPLINA HOJE,\nRESULTADOS SEMPRE."}</Text>
+          </View>
         ) : (
-          <View style={styles.skipBtn} />
+          <View />
         )}
+        <Pressable onPress={handleSkip} hitSlop={10} accessibilityRole="button" style={styles.skipBtn}>
+          <Text style={styles.skipText}>Pular</Text>
+        </Pressable>
       </View>
 
       <FlatList
         ref={flatListRef}
         data={slides}
-        renderItem={renderSlide}
         keyExtractor={(item) => item.id}
         horizontal
         pagingEnabled
-        showsHorizontalScrollIndicator={false}
         scrollEnabled={false}
+        showsHorizontalScrollIndicator={false}
+        getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
+        renderItem={({ item }) => (
+          <View style={[styles.slide, { width }]}>
+            <SlideArt id={item.id} />
+            <Text style={styles.slideTitle}>{item.title}</Text>
+            <Text style={styles.slideDescription}>{item.description}</Text>
+          </View>
+        )}
       />
 
-      <View
-        style={[
-          styles.footer,
-          { paddingBottom: Platform.OS === "web" ? 34 : insets.bottom + 24 },
-        ]}
-      >
-        <View style={styles.pagination}>
-          {slides.map((_, i) => (
-            <View
-              key={i}
-              style={[
-                styles.paginationDot,
-                i === currentIndex && styles.paginationDotActive,
-              ]}
-            />
+      <View style={[styles.footer, { paddingBottom: Platform.OS === "web" ? 34 : insets.bottom + 20 }]}>
+        <View style={styles.pagination} accessibilityLabel={`Página ${currentIndex + 1} de ${slides.length}`}>
+          {slides.map((s, i) => (
+            <View key={s.id} style={[styles.dot, i === currentIndex && styles.dotActive]} />
           ))}
         </View>
 
-        <Pressable
+        <PrimaryButton
+          label={isLast ? "Começar" : "Próximo"}
+          trailingIcon={isLast ? "check" : "arrow-right"}
           onPress={handleNext}
-          style={({ pressed }) => [
-            styles.nextButton,
-            pressed && styles.nextButtonPressed,
-          ]}
-        >
-          <LinearGradient
-            colors={[Colors.primary, Colors.primary]}
-            style={styles.nextButtonGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            <Text style={styles.nextButtonText}>
-              {currentIndex === slides.length - 1 ? "Comecar" : "Proximo"}
-            </Text>
-            <Ionicons
-              name={
-                currentIndex === slides.length - 1
-                  ? "checkmark"
-                  : "arrow-forward"
-              }
-              size={20}
-              color={Colors.onPrimary}
-            />
-          </LinearGradient>
-        </Pressable>
+        />
+        {isLast && (
+          <Text style={styles.note}>Você poderá ajustar suas preferências depois.</Text>
+        )}
       </View>
     </View>
   );
@@ -177,96 +197,153 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.background,
+    overflow: "hidden",
   },
   header: {
     flexDirection: "row",
-    justifyContent: "flex-end",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 24,
   },
+  brand: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexShrink: 1,
+  },
+  brandName: {
+    fontFamily: "Rubik_800ExtraBold",
+    fontSize: 19,
+    lineHeight: 20,
+    color: Colors.text,
+  },
+  brandDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: Colors.border,
+    marginHorizontal: 4,
+  },
+  brandTagline: {
+    flexShrink: 1,
+    fontFamily: "Rubik_500Medium",
+    fontSize: 9,
+    letterSpacing: 1.6,
+    lineHeight: 14,
+    color: Colors.textSecondary,
+  },
   skipBtn: {
-    padding: 8,
-    minWidth: 60,
+    minHeight: 44,
+    justifyContent: "center",
+    paddingLeft: 12,
   },
   skipText: {
-    fontFamily: "Rubik_500Medium",
-    fontSize: 15,
+    fontFamily: "Rubik_600SemiBold",
+    fontSize: 18,
     color: Colors.textSecondary,
-    textAlign: "right",
   },
   slide: {
     flex: 1,
+    alignItems: "center",
     justifyContent: "center",
+    paddingHorizontal: 28,
+    gap: 16,
+  },
+  artWrap: {
+    width: 260,
+    height: 240,
     alignItems: "center",
-    paddingHorizontal: 40,
-  },
-  slideContent: {
-    alignItems: "center",
-    gap: 24,
-  },
-  iconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 36,
-    overflow: "hidden",
-    marginBottom: 16,
-  },
-  iconGradient: {
-    flex: 1,
     justifyContent: "center",
+    marginBottom: 24,
+  },
+  artIcon: {
+    position: "absolute",
+  },
+  artSquare: {
+    width: 180,
+    height: 180,
+    borderRadius: 52,
     alignItems: "center",
+    justifyContent: "center",
+  },
+  sparkTopRight: {
+    position: "absolute",
+    top: -6,
+    right: 0,
+  },
+  sparkBottomLeft: {
+    position: "absolute",
+    bottom: 30,
+    left: 0,
+  },
+  sparkLeft: {
+    position: "absolute",
+    left: 6,
+    top: 70,
+  },
+  sparkRight: {
+    position: "absolute",
+    right: 6,
+    top: 70,
   },
   slideTitle: {
-    fontSize: 28,
-    fontFamily: "Rubik_700Bold",
+    fontFamily: "Rubik_800ExtraBold",
+    fontSize: 34,
+    lineHeight: 40,
     color: Colors.text,
     textAlign: "center",
-    lineHeight: 36,
   },
   slideDescription: {
-    fontSize: 16,
     fontFamily: "Rubik_400Regular",
+    fontSize: 17,
+    lineHeight: 25,
     color: Colors.textSecondary,
     textAlign: "center",
-    lineHeight: 24,
   },
   footer: {
     paddingHorizontal: 24,
-    gap: 24,
-    alignItems: "center",
+    gap: 20,
   },
   pagination: {
     flexDirection: "row",
-    gap: 8,
+    justifyContent: "center",
+    gap: 10,
   },
-  paginationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: Colors.border,
   },
-  paginationDotActive: {
-    width: 24,
+  dotActive: {
+    width: 32,
     backgroundColor: Colors.primary,
   },
-  nextButton: {
-    width: "100%",
-    borderRadius: 16,
-    overflow: "hidden",
+  note: {
+    fontFamily: "Rubik_400Regular",
+    fontSize: 14,
+    color: Colors.textSecondary,
+    textAlign: "center",
+    marginTop: -6,
   },
-  nextButtonPressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }],
+  blobTopLeft: {
+    position: "absolute",
+    top: -40,
+    left: -60,
   },
-  nextButtonGradient: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 16,
-    gap: 8,
+  blobBottomRight: {
+    position: "absolute",
+    bottom: -20,
+    right: -40,
   },
-  nextButtonText: {
-    fontFamily: "Rubik_600SemiBold",
-    fontSize: 17,
-    color: Colors.onPrimary,
+  stripesTopLeft: {
+    position: "absolute",
+    top: 120,
+    left: -50,
+  },
+  stripesBottomRight: {
+    position: "absolute",
+    bottom: 160,
+    right: -50,
   },
 });
