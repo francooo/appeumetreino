@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Pressable,
   Platform,
-  ScrollView,
   Image,
   Alert,
   ActivityIndicator,
@@ -16,6 +15,7 @@ import * as ImagePicker from "expo-image-picker";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
+import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import Icon from "@/components/Icon";
 import TextField from "@/components/ui/TextField";
 import { PrimaryButton, SecondaryButton } from "@/components/ui/Buttons";
@@ -191,7 +191,8 @@ export default function MealEntryScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView
+      <KeyboardAwareScrollViewCompat
+        bottomOffset={24}
         contentContainerStyle={[
           styles.content,
           { paddingTop: Platform.OS === "web" ? 67 : insets.top + 12 },
@@ -317,7 +318,7 @@ export default function MealEntryScreen() {
             <Text style={styles.deleteText}>Excluir refeição</Text>
           </Pressable>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollViewCompat>
 
       <View style={[styles.footer, { paddingBottom: Platform.OS === "web" ? 34 : insets.bottom + 16 }]}>
         <PrimaryButton

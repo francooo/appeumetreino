@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Keyboard, Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Colors from "@/constants/colors";
 import type { IconName } from "@/components/Icon";
 import TextField from "./TextField";
@@ -19,7 +20,24 @@ interface NumberPromptProps {
   onSubmit: (value: number) => Promise<void> | void;
 }
 
-// Modal com um campo numerico (meta de calorias, peso). Aceita virgula como decimal.
+// Altura atual do teclado. No Android (tela cheia do SDK 54) a janela do Modal nao encolhe
+// quando o teclado abre, entao a folha precisa subir manualmente.
+function useKeyboardHeight() {
+  const [height, setHeight] = useState(0);
+  useEffect(() => {
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const show = Keyboard.addListener(showEvent, (e) => setHeight(e.endCoordinates.height));
+    const hide = Keyboard.addListener(hideEvent, () => setHeight(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+  return height;
+}
+
+// Folha com um campo numerico (meta de calorias, peso). Aceita virgula como decimal.
 export default function NumberPrompt({
   visible,
   title,
@@ -33,6 +51,8 @@ export default function NumberPrompt({
   onCancel,
   onSubmit,
 }: NumberPromptProps) {
+  const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
   const [text, setText] = useState(initialValue);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +64,11 @@ export default function NumberPrompt({
     }
   }, [visible, initialValue]);
 
+  const close = () => {
+    Keyboard.dismiss();
+    onCancel();
+  };
+
   const handleSubmit = async () => {
     const value = Number(text.replace(",", "."));
     if (!Number.isFinite(value) || value < min || value > max || (!allowDecimal && !Number.isInteger(value))) {
@@ -53,6 +78,7 @@ export default function NumberPrompt({
     setSaving(true);
     try {
       await onSubmit(value);
+      Keyboard.dismiss();
     } catch {
       setError("Não foi possível salvar. Verifique sua conexão.");
     } finally {
@@ -61,13 +87,23 @@ export default function NumberPrompt({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={styles.backdrop}
-      >
-        <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} accessibilityLabel="Fechar" />
-        <View style={styles.sheet}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+      navigationBarTranslucent
+      onRequestClose={close}
+    >
+      <View style={styles.backdrop}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel="Fechar" />
+        <View
+          style={[
+            styles.sheet,
+            // Com teclado aberto a folha fica logo acima dele; fechado, acima da barra de navegacao
+            { marginBottom: keyboardHeight, paddingBottom: keyboardHeight > 0 ? 20 : 24 + insets.bottom },
+          ]}
+        >
           <Text style={styles.title}>{title}</Text>
           <TextField
             icon={icon}
@@ -80,11 +116,11 @@ export default function NumberPrompt({
           />
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <PrimaryButton label="Salvar" trailingIcon="check" onPress={handleSubmit} loading={saving} />
-          <Pressable onPress={onCancel} style={styles.cancel} accessibilityRole="button">
+          <Pressable onPress={close} style={styles.cancel} accessibilityRole="button">
             <Text style={styles.cancelText}>Cancelar</Text>
           </Pressable>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
@@ -98,7 +134,6 @@ const styles = StyleSheet.create({
   sheet: {
     gap: 14,
     padding: 24,
-    paddingBottom: 32,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     backgroundColor: Colors.background,

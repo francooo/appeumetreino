@@ -5,13 +5,13 @@ import {
   StyleSheet,
   Pressable,
   Platform,
-  ScrollView,
   Alert,
   ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Colors from "@/constants/colors";
+import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import Avatar from "@/components/Avatar";
 import Icon from "@/components/Icon";
 import { useApp } from "@/contexts/AppContext";
@@ -50,7 +50,8 @@ export default function EditProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView
+      <KeyboardAwareScrollViewCompat
+        bottomOffset={24}
         contentContainerStyle={[
           styles.content,
           { paddingTop: Platform.OS === "web" ? 67 : insets.top + 12 },
@@ -94,7 +95,7 @@ export default function EditProfileScreen() {
           <TextField icon="email" label="Email" value={user?.email || ""} editable={false} />
           <Text style={styles.note}>O e-mail não pode ser alterado.</Text>
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollViewCompat>
 
       <View style={[styles.footer, { paddingBottom: Platform.OS === "web" ? 34 : insets.bottom + 16 }]}>
         <PrimaryButton

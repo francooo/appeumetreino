@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, Pressable, Alert, Platform, ScrollView } from "react-native";
+import { View, Text, StyleSheet, Pressable, Alert, Platform } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
+import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { useApp } from "@/contexts/AppContext";
 import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
 import TextField from "@/components/ui/TextField";
@@ -57,7 +58,8 @@ export default function LoginScreen() {
   };
 
   return (
-    <ScrollView
+    <KeyboardAwareScrollViewCompat
+        bottomOffset={24}
       style={styles.container}
       contentContainerStyle={[
         styles.content,
@@ -128,7 +130,7 @@ export default function LoginScreen() {
           <Text style={styles.link}>Criar conta</Text>
         </Pressable>
       </View>
-    </ScrollView>
+    </KeyboardAwareScrollViewCompat>
   );
 }
 
